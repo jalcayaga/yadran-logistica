@@ -10,12 +10,15 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { Button } from '@/components/ui/button';
-import { Plus, ArrowRight, Pencil, Trash2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Plus, ArrowRight, Pencil, Trash2, ArrowUpDown } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import RouteForm from './RouteForm';
 
 import { type Route } from '@/utils/zod_schemas';
+
+type SortKey = 'mode' | 'origin' | 'destination' | 'operator' | 'vessel';
 
 // Extended type for display
 interface RouteWithRelations extends Route {
@@ -32,7 +35,8 @@ export default function RouteTable() {
     const [isOpen, setIsOpen] = useState(false);
     const [editingRoute, setEditingRoute] = useState<RouteWithRelations | null>(null);
     const [deletingRoute, setDeletingRoute] = useState<RouteWithRelations | null>(null);
-    const [searchTerm, setSearchTerm] = useState(''); // Assuming searchTerm will be added later for filtering
+    const [searchTerm, setSearchTerm] = useState('');
+    const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: 'asc' | 'desc' } | null>(null);
 
     const fetchRoutes = async () => {
         setLoading(true);
@@ -62,8 +66,39 @@ export default function RouteTable() {
             (route.operator?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
             (route.vessel?.name || '').toLowerCase().includes(searchTerm.toLowerCase())
         );
+
+        if (sortConfig) {
+            result.sort((a, b) => {
+                let valA = '';
+                let valB = '';
+
+                switch (sortConfig.key) {
+                    case 'mode': valA = a.mode; valB = b.mode; break;
+                    case 'origin': valA = a.origin.name; valB = b.origin.name; break;
+                    case 'destination': valA = a.destination.name; valB = b.destination.name; break;
+                    case 'operator': valA = a.operator?.name || ''; valB = b.operator?.name || ''; break;
+                    case 'vessel': valA = a.vessel?.name || ''; valB = b.vessel?.name || ''; break;
+                }
+
+                valA = valA.toLowerCase();
+                valB = valB.toLowerCase();
+
+                if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+                if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+        }
+
         setFilteredRoutes(result);
-    }, [routes, searchTerm]);
+    }, [routes, searchTerm, sortConfig]);
+
+    const handleSort = (key: SortKey) => {
+        let direction: 'asc' | 'desc' = 'asc';
+        if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+            direction = 'desc';
+        }
+        setSortConfig({ key, direction });
+    };
 
     const handleDelete = async () => {
         if (!deletingRoute) return;
@@ -88,6 +123,13 @@ export default function RouteTable() {
                     <h2 className="text-xl font-semibold">Rutas Definidas ({filteredRoutes.length})</h2>
                     <p className="text-sm text-muted-foreground">Configura los tramos frecuentes para agilizar la creación de itinerarios.</p>
                 </div>
+                <div className="w-[300px]">
+                    <Input
+                        placeholder="Buscar ruta, operador o nave..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
                 <Dialog open={isOpen} onOpenChange={setIsOpen}>
                     <DialogTrigger asChild>
                         <Button><Plus className="mr-2 h-4 w-4" /> Nueva Ruta</Button>
@@ -107,12 +149,22 @@ export default function RouteTable() {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Modo</TableHead>
-                            <TableHead>Origen</TableHead>
+                            <TableHead onClick={() => handleSort('mode')} className="cursor-pointer hover:bg-muted/50">
+                                Modo <ArrowUpDown className="inline ml-1 h-3 w-3" />
+                            </TableHead>
+                            <TableHead onClick={() => handleSort('origin')} className="cursor-pointer hover:bg-muted/50">
+                                Origen <ArrowUpDown className="inline ml-1 h-3 w-3" />
+                            </TableHead>
                             <TableHead></TableHead>
-                            <TableHead>Destino</TableHead>
-                            <TableHead>Op. Default</TableHead>
-                            <TableHead>Nave Default</TableHead>
+                            <TableHead onClick={() => handleSort('destination')} className="cursor-pointer hover:bg-muted/50">
+                                Destino <ArrowUpDown className="inline ml-1 h-3 w-3" />
+                            </TableHead>
+                            <TableHead onClick={() => handleSort('operator')} className="cursor-pointer hover:bg-muted/50">
+                                Op. Default <ArrowUpDown className="inline ml-1 h-3 w-3" />
+                            </TableHead>
+                            <TableHead onClick={() => handleSort('vessel')} className="cursor-pointer hover:bg-muted/50">
+                                Nave Default <ArrowUpDown className="inline ml-1 h-3 w-3" />
+                            </TableHead>
                             <TableHead className="w-[100px]">Acciones</TableHead>
                         </TableRow>
                     </TableHeader>

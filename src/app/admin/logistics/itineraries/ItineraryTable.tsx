@@ -15,7 +15,7 @@ import { Plus, Calendar, Clock, Ship } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import ItineraryForm from './ItineraryForm';
 import BookingManager from './BookingManager';
-import { format } from 'date-fns';
+import { formatDate } from "@/utils/formatters";
 import { Badge } from "@/components/ui/badge";
 
 // Extended type for fetching
@@ -113,7 +113,7 @@ export default function ItineraryTable() {
                                 <TableRow key={itin.id}>
                                     <TableCell>
                                         <div className="flex flex-col">
-                                            <span className="font-medium flex items-center gap-1"><Calendar className="w-3 h-3" /> {itin.date}</span>
+                                            <span className="font-medium flex items-center gap-1"><Calendar className="w-3 h-3" /> {formatDate(itin.date)}</span>
                                             <span className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="w-3 h-3" /> {itin.start_time}</span>
                                         </div>
                                     </TableCell>

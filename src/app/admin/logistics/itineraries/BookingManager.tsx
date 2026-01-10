@@ -14,6 +14,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Plus, Trash2, AlertCircle, FileText, Pencil } from 'lucide-react';
 import { Itinerary, Person } from '@/utils/zod_schemas';
 import { ManifestDocument } from '@/components/pdf/ManifestDocument';
+import { useToast } from "@/hooks/use-toast";
+import { formatDate } from "@/utils/formatters";
 
 
 
@@ -37,6 +39,7 @@ export default function BookingManager({ itinerary }: BookingManagerProps) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const { toast } = useToast();
 
     // Form State
     const [selectedPassenger, setSelectedPassenger] = useState<string>('');
@@ -93,6 +96,15 @@ export default function BookingManager({ itinerary }: BookingManagerProps) {
 
             const data = await res.json();
 
+            if (res.status === 409) {
+                toast({
+                    variant: "destructive",
+                    title: "⚠️ Sin cupo disponible",
+                    description: "La nave no tiene capacidad para este tramo.",
+                });
+                return; // Stop execution without throwing generic error
+            }
+
             if (!res.ok) {
                 throw new Error(data.error || 'Error al guardar reserva');
             }
@@ -101,8 +113,18 @@ export default function BookingManager({ itinerary }: BookingManagerProps) {
             fetchBookings();
             setIsDialogOpen(false);
             resetForm();
+            toast({
+                title: editingBookingId ? "Reserva actualizada" : "Reserva creada",
+                description: `Pasajero ${selectedPassenger} asignado exitosamente.`,
+                className: "bg-green-500 text-white border-green-600"
+            });
         } catch (err: any) {
             setError(err.message);
+            toast({
+                variant: "destructive",
+                title: "Error al guardar",
+                description: err.message
+            });
         } finally {
             setLoading(false);
         }
@@ -150,7 +172,7 @@ export default function BookingManager({ itinerary }: BookingManagerProps) {
                                 const blob = await pdf(
                                     <ManifestDocument
                                         vesselName={itinerary.vessel?.name || 'Nave Desconocida'}
-                                        itineraryDate={itinerary.date}
+                                        itineraryDate={formatDate(itinerary.date)}
                                         startTime={itinerary.start_time}
                                         passengers={bookings}
                                     />
@@ -281,7 +303,9 @@ export default function BookingManager({ itinerary }: BookingManagerProps) {
                                     </TableCell>
                                     <TableCell>
                                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                            {b.status}
+                                            {b.status === 'confirmed' ? 'Confirmada' :
+                                                b.status === 'cancelled' ? 'Cancelada' :
+                                                    b.status === 'pending' ? 'Pendiente' : b.status}
                                         </span>
                                     </TableCell>
                                     <TableCell className="text-right">
@@ -300,6 +324,7 @@ export default function BookingManager({ itinerary }: BookingManagerProps) {
                                                 onClick={async () => {
                                                     if (!confirm('¿Eliminar reserva?')) return;
                                                     await fetch(`/api/bookings/${b.id}`, { method: 'DELETE' });
+                                                    toast({ title: "Reserva eliminada" });
                                                     fetchBookings();
                                                 }}
                                             >

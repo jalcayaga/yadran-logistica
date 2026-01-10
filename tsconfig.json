@@ -38,6 +38,7 @@
   ],
   "exclude": [
     "node_modules",
-    "auditoria-yadran"
+    "auditoria-yadran",
+    "auditoria-yadran-recuperado"
   ]
 }

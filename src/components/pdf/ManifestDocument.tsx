@@ -148,7 +148,7 @@ export const ManifestDocument = ({ vesselName, itineraryDate, startTime, passeng
             <Text style={{ marginTop: 20, fontSize: 10 }}>Total Pasajeros: {passengers.length}</Text>
 
             <View style={styles.footer}>
-                <Text>Generado automáticamente por Sistema Logístico Yadran - {new Date().toLocaleString()}</Text>
+                <Text>Generado automáticamente por Sistema Logístico Yadran - {new Date().toLocaleString("es-CL")}</Text>
             </View>
         </Page>
     </Document>

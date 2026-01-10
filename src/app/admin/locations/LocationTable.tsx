@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Location } from '@/utils/zod_schemas';
+import { translateLocationType } from '@/utils/formatters';
 import {
     Table,
     TableBody,
@@ -157,7 +158,7 @@ export default function LocationTable() {
                                 <TableRow key={loc.id}>
                                     <TableCell className="font-mono text-xs">{loc.code}</TableCell>
                                     <TableCell className="font-medium">{loc.name}</TableCell>
-                                    <TableCell><span className="capitalize">{loc.type}</span></TableCell>
+                                    <TableCell><span className="capitalize">{translateLocationType(loc.type)}</span></TableCell>
                                     <TableCell>
                                         <div className="flex gap-1">
                                             <Button variant="ghost" size="sm" onClick={() => setEditingLocation(loc)}>

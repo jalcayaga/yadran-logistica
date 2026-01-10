@@ -157,7 +157,7 @@ export default function ItineraryForm({ onSuccess, initialData }: ItineraryFormP
                                         #{index + 1}
                                     </div>
 
-                                    <div className="md:col-span-5 space-y-1">
+                                    <div className="md:col-span-4 space-y-1">
                                         <Label className="text-xs">Ubicación</Label>
                                         <Select
                                             onValueChange={(val) => setValue(`stops.${index}.location_id`, val)}
@@ -175,17 +175,17 @@ export default function ItineraryForm({ onSuccess, initialData }: ItineraryFormP
                                         {errors.stops?.[index]?.location_id && <p className="text-red-500 text-xs text-nowrap">Requerido</p>}
                                     </div>
 
-                                    <div className="md:col-span-2 space-y-1">
+                                    <div className="md:col-span-3 space-y-1">
                                         <Label className="text-xs">Llegada</Label>
                                         <Input type="time" {...register(`stops.${index}.arrival_time`)} placeholder="--:--" />
                                     </div>
 
-                                    <div className="md:col-span-2 space-y-1">
+                                    <div className="md:col-span-3 space-y-1">
                                         <Label className="text-xs">Salida</Label>
                                         <Input type="time" {...register(`stops.${index}.departure_time`)} placeholder="--:--" />
                                     </div>
 
-                                    <div className="md:col-span-2 flex justify-end">
+                                    <div className="md:col-span-1 flex justify-end">
                                         {index > 1 && ( // Can't delete first 2 minimal stops easily for now, keep logic simple
                                             <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="text-red-500 hover:text-red-700 hover:bg-red-50">
                                                 <Trash2 className="w-4 h-4" />

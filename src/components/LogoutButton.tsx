@@ -2,8 +2,14 @@
 
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
+import { Button, ButtonProps } from '@/components/ui/button';
+import { LogOut } from 'lucide-react';
 
-export default function LogoutButton() {
+interface LogoutButtonProps extends ButtonProps {
+    showLabel?: boolean;
+}
+
+export default function LogoutButton({ showLabel = false, className, variant = 'destructive', ...props }: LogoutButtonProps) {
     const router = useRouter();
     const supabase = createClient();
 
@@ -14,11 +20,14 @@ export default function LogoutButton() {
     };
 
     return (
-        <button
+        <Button
             onClick={handleLogout}
-            className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
+            variant={variant}
+            className={className}
+            {...props}
         >
-            Cerrar Sesión
-        </button>
+            <LogOut className={`h-4 w-4 ${showLabel ? 'mr-2' : ''}`} />
+            {showLabel && "Cerrar Sesión"}
+        </Button>
     );
 }

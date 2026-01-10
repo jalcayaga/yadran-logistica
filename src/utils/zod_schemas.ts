@@ -12,7 +12,7 @@ export const LocationTypeEnum = z.enum(['city', 'port', 'center', 'base', 'other
 export const OperatorTypeEnum = z.enum(['airline', 'marine', 'internal', 'other']);
 export const VesselTypeEnum = z.enum(['lancha', 'barcaza', 'other']);
 export const TransportModeEnum = z.enum(['avion', 'lancha', 'interno']);
-export const ItineraryStatusEnum = z.enum(['scheduled', 'in_progress', 'completed', 'cancelled']);
+export const ItineraryStatusEnum = z.enum(['scheduled', 'in_progress', 'completed', 'cancelled', 'suspended']);
 
 // --- Schemas ---
 

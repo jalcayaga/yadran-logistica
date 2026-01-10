@@ -3,6 +3,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { locationSchema, type Location, LocationTypeEnum } from '@/utils/zod_schemas';
+import { translateLocationType } from '@/utils/formatters';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -94,7 +95,7 @@ export default function LocationForm({ onSuccess, initialData }: LocationFormPro
                         <SelectContent>
                             {LocationTypeEnum.options.map((opt) => (
                                 <SelectItem key={opt} value={opt}>
-                                    {opt.charAt(0).toUpperCase() + opt.slice(1)}
+                                    {translateLocationType(opt)}
                                 </SelectItem>
                             ))}
                         </SelectContent>
