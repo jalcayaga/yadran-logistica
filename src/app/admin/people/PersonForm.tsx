@@ -4,10 +4,10 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { personSchema, type Person } from '@/utils/zod_schemas';
 import { Button } from '@/components/ui/button';
-import { normalizeRut, normalizePhone } from '@/utils/formatters';
+import { normalizeRut, normalizePhone, formatRut } from '@/utils/formatters';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { z } from 'zod';
 
 // Use z.input to handle fields with defaults (like active) correctly
@@ -26,10 +26,15 @@ export default function PersonForm({ onSuccess, initialData }: PersonFormProps) 
         register,
         handleSubmit,
         formState: { errors },
-        reset
+        reset,
+        setValue,
+        watch
     } = useForm<PersonFormData>({
         resolver: zodResolver(personSchema),
-        defaultValues: initialData || {
+        defaultValues: initialData ? {
+            ...initialData,
+            rut_normalized: formatRut(initialData.rut_normalized) // Display formatted initially
+        } : {
             active: true,
             first_name: '',
             last_name: '',
@@ -45,10 +50,14 @@ export default function PersonForm({ onSuccess, initialData }: PersonFormProps) 
         setLoading(true);
         setGlobalError('');
 
-        // Enforce normalization
+        // Prepare data for API:
+        // 1. Valid normalized RUT for unique constraint
+        // 2. Formatted display RUT
+        // 3. Normalized Phone
         const cleanData = {
             ...data,
             rut_normalized: normalizeRut(data.rut_normalized),
+            rut_display: formatRut(data.rut_normalized),
             phone_e164: normalizePhone(data.phone_e164 || '')
         };
 
@@ -85,17 +94,20 @@ export default function PersonForm({ onSuccess, initialData }: PersonFormProps) 
             {globalError && <div className="text-red-500 text-sm font-bold">{globalError}</div>}
 
             <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                    <Label htmlFor="rut_normalized">RUT (sin puntos)</Label>
-                    <Input id="rut_normalized" placeholder="12345678-9" {...register('rut_normalized')} />
+                <div className="space-y-2 col-span-2 md:col-span-1">
+                    <Label htmlFor="rut_normalized">RUT</Label>
+                    <Input
+                        id="rut_normalized"
+                        placeholder="12.345.678-K"
+                        {...register('rut_normalized')}
+                        onChange={(e) => {
+                            // Auto-format as user types
+                            const formatted = formatRut(e.target.value);
+                            setValue('rut_normalized', formatted);
+                        }}
+                    />
                     {errors.rut_normalized && <p className="text-red-500 text-xs">{errors.rut_normalized.message}</p>}
-                    <p className="text-[10px] text-muted-foreground">Se normalizará automáticamente</p>
-                </div>
-
-                <div className="space-y-2">
-                    <Label htmlFor="rut_display">RUT Visual</Label>
-                    <Input id="rut_display" placeholder="12.345.678-9" {...register('rut_display')} />
-                    {errors.rut_display && <p className="text-red-500 text-xs">{errors.rut_display.message}</p>}
+                    <p className="text-[10px] text-muted-foreground">Formato automático (ej: 12.345.678-K)</p>
                 </div>
             </div>
 

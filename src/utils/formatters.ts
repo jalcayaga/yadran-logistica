@@ -13,6 +13,29 @@ export function normalizeRut(rut: string): string {
     return clean;
 }
 
+export function formatRut(rut: string): string {
+    // 1. Clean data (remove dots, hyphens)
+    let value = rut.replace(/\./g, '').replace(/-/g, '');
+
+    // 2. Get body and dv
+    const body = value.slice(0, -1);
+    const dv = value.slice(-1).toUpperCase();
+
+    if (value.length <= 1) return value; // Too short to format
+
+    // 3. Format body with dots
+    let formattedBody = "";
+    for (let i = body.length - 1, j = 1; i >= 0; i--, j++) {
+        formattedBody = body.charAt(i) + formattedBody;
+        if (j % 3 === 0 && i !== 0) {
+            formattedBody = "." + formattedBody;
+        }
+    }
+
+    // 4. Return formatted
+    return `${formattedBody}-${dv}`;
+}
+
 export function normalizePhone(phone: string): string | null {
     if (!phone) return null;
 
