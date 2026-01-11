@@ -59,15 +59,20 @@ export default function PeopleTable() {
         // 1. Filter
         if (searchTerm) {
             const lowerTerm = searchTerm.toLowerCase();
-            const cleanTerm = normalizeRut(searchTerm).toLowerCase(); // Clean search term for RUT matching
+            const cleanSearchTerm = searchTerm.replace(/[^0-9kK]/g, '').toLowerCase();
 
-            result = result.filter(p =>
-                p.first_name.toLowerCase().includes(lowerTerm) ||
-                p.last_name.toLowerCase().includes(lowerTerm) ||
-                p.rut_display.toLowerCase().includes(lowerTerm) ||
-                p.rut_normalized.toLowerCase().includes(cleanTerm) || // Check against normalized RUT
-                p.company.toLowerCase().includes(lowerTerm)
-            );
+            result = result.filter(p => {
+                const cleanRutNormalized = p.rut_normalized.replace(/[^0-9kK]/g, '').toLowerCase();
+                const cleanRutDisplay = p.rut_display.replace(/[^0-9kK]/g, '').toLowerCase();
+
+                return (
+                    p.first_name.toLowerCase().includes(lowerTerm) ||
+                    p.last_name.toLowerCase().includes(lowerTerm) ||
+                    cleanRutDisplay.includes(cleanSearchTerm) ||
+                    cleanRutNormalized.includes(cleanSearchTerm) ||
+                    p.company.toLowerCase().includes(lowerTerm)
+                );
+            });
         }
 
         // 2. Sort
