@@ -11,7 +11,7 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { Button } from '@/components/ui/button';
-import { Plus, Calendar, Clock, Ship, Trash2 } from 'lucide-react';
+import { Plus, Calendar, Clock, Ship, Trash2, Pencil } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import ItineraryForm from './ItineraryForm';
@@ -23,9 +23,12 @@ import { Badge } from "@/components/ui/badge";
 // Extended type for fetching
 interface ItineraryWithRelations extends Omit<Itinerary, 'stops'> {
     vessel?: { name: string; capacity: number };
-    stops?: {
+    stops: {
         id: string;
         stop_order: number;
+        location_id: string;
+        arrival_time: string;
+        departure_time: string;
         location: { name: string };
     }[];
 }
@@ -35,6 +38,7 @@ export default function ItineraryTable() {
     const [loading, setLoading] = useState(true);
     const [isOpen, setIsOpen] = useState(false);
     const [managingItinerary, setManagingItinerary] = useState<ItineraryWithRelations | null>(null);
+    const [editingItinerary, setEditingItinerary] = useState<ItineraryWithRelations | null>(null);
     const [deletingItinerary, setDeletingItinerary] = useState<ItineraryWithRelations | null>(null);
 
     const fetchItineraries = async () => {
@@ -89,16 +93,24 @@ export default function ItineraryTable() {
                     <h2 className="text-xl font-semibold">Itinerarios Programados</h2>
                     <p className="text-sm text-muted-foreground">Gestiona las salidas de naves y sus paradas.</p>
                 </div>
-                <Dialog open={isOpen} onOpenChange={setIsOpen}>
+                <Dialog open={isOpen || !!editingItinerary} onOpenChange={(open) => {
+                    if (!open) {
+                        setIsOpen(false);
+                        setEditingItinerary(null);
+                    }
+                }}>
                     <DialogTrigger asChild>
-                        <Button><Plus className="mr-2 h-4 w-4" /> Nuevo Itinerario</Button>
+                        <Button onClick={() => setIsOpen(true)}><Plus className="mr-2 h-4 w-4" /> Nuevo Itinerario</Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-3xl">
                         <DialogHeader>
-                            <DialogTitle>Crear Nuevo Itinerario</DialogTitle>
+                            <DialogTitle>{editingItinerary ? 'Editar Itinerario' : 'Crear Nuevo Itinerario'}</DialogTitle>
                         </DialogHeader>
                         <div className="py-2">
-                            <ItineraryForm onSuccess={() => { setIsOpen(false); fetchItineraries(); }} />
+                            <ItineraryForm
+                                initialData={editingItinerary || undefined}
+                                onSuccess={() => { setIsOpen(false); setEditingItinerary(null); fetchItineraries(); }}
+                            />
                         </div>
                     </DialogContent>
                 </Dialog>
@@ -160,6 +172,9 @@ export default function ItineraryTable() {
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex gap-2">
+                                            <Button variant="ghost" size="sm" onClick={() => setEditingItinerary(itin)} title="Editar">
+                                                <Pencil className="w-4 h-4 text-blue-500" />
+                                            </Button>
                                             <Button variant="outline" size="sm" onClick={() => setManagingItinerary(itin)}>
                                                 Gestionar
                                             </Button>

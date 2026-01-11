@@ -37,17 +37,60 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const { id } = await params;
     const body = await request.json();
 
+    // 1. Separate stops from header data
+    const { stops, ...headerData } = body;
+
     // Validate status if present
-    if (body.status) {
-        const statusVal = ItineraryStatusEnum.safeParse(body.status);
+    if (headerData.status) {
+        const statusVal = ItineraryStatusEnum.safeParse(headerData.status);
         if (!statusVal.success) {
             return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
         }
     }
 
+    // 2. Handle Stops Update (if provided)
+    if (stops && Array.isArray(stops)) {
+        // A. Delete existing stops
+        // This will FAIL if bookings exist (FK constraint)
+        const { error: deleteError } = await supabase
+            .from('itinerary_stops')
+            .delete()
+            .eq('itinerary_id', id);
+
+        if (deleteError) {
+            console.error("Error deleting stops:", deleteError);
+            if (deleteError.code === '23503') { // Foreign Key Violation
+                return NextResponse.json({
+                    error: 'No se puede modificar la ruta porque existen reservas activas. Cancele las reservas primero.'
+                }, { status: 409 });
+            }
+            return NextResponse.json({ error: 'Error removing old stops: ' + deleteError.message }, { status: 500 });
+        }
+
+        // B. Insert new stops
+        if (stops.length > 0) {
+            const stopsToInsert = stops.map((stop: any, index: number) => ({
+                itinerary_id: id,
+                location_id: stop.location_id,
+                stop_order: index,
+                arrival_time: stop.arrival_time || null,
+                departure_time: stop.departure_time || null,
+            }));
+
+            const { error: insertError } = await supabase
+                .from('itinerary_stops')
+                .insert(stopsToInsert);
+
+            if (insertError) {
+                return NextResponse.json({ error: 'Error inserting new stops: ' + insertError.message }, { status: 500 });
+            }
+        }
+    }
+
+    // 3. Update Itinerary Header
     const { data, error } = await supabase
         .from('itineraries')
-        .update(body)
+        .update(headerData)
         .eq('id', id)
         .select()
         .single();

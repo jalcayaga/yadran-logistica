@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
             *,
             vessel:vessels(name, capacity),
             stops:itinerary_stops(
-                id, stop_order, arrival_time, departure_time,
+                id, stop_order, arrival_time, departure_time, location_id,
                 location:locations(name, code, type)
             )
         `)

@@ -85,15 +85,22 @@ export default function ItineraryForm({ onSuccess, initialData }: ItineraryFormP
         const payload = { ...data, stops };
 
         try {
-            const res = await fetch('/api/itineraries', {
-                method: 'POST', // TODO: Support PATCH
+            const url = initialData?.id ? `/api/itineraries/${initialData.id}` : '/api/itineraries';
+            const method = initialData?.id ? 'PATCH' : 'POST';
+
+            const res = await fetch(url, {
+                method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
             });
 
             if (!res.ok) {
                 const body = await res.json();
-                throw new Error(body.error || 'Error creating itinerary');
+                if (res.status === 409) {
+                    // Specific FK violation error from backend
+                    throw new Error(body.error);
+                }
+                throw new Error(body.error || 'Error saving itinerary');
             }
 
             onSuccess();
@@ -203,7 +210,7 @@ export default function ItineraryForm({ onSuccess, initialData }: ItineraryFormP
             <div className="flex justify-end gap-2 pt-4 border-t">
                 <Button type="button" variant="outline" onClick={onSuccess}>Cancelar</Button>
                 <Button type="submit" disabled={loading} className="w-40">
-                    {loading ? 'Creando...' : 'Crear Itinerario'}
+                    {loading ? 'Guardando...' : (initialData ? 'Guardar Cambios' : 'Crear Itinerario')}
                 </Button>
             </div>
         </form>
