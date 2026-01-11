@@ -432,10 +432,10 @@ export default function BookingManager({ itinerary }: BookingManagerProps) {
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
-                                            <TableHead>RUT</TableHead>
-                                            <TableHead>Pasajero</TableHead>
-                                            <TableHead>Tramo</TableHead>
-                                            <TableHead className="w-[100px]">Estado</TableHead>
+                                            <TableHead className="text-center">RUT</TableHead>
+                                            <TableHead className="text-center">Pasajero</TableHead>
+                                            <TableHead className="text-center">Tramo</TableHead>
+                                            <TableHead className="w-[100px] text-center">Estado</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -443,12 +443,12 @@ export default function BookingManager({ itinerary }: BookingManagerProps) {
                                             <TableRow key={idx}>
                                                 <TableCell>{row.rut}</TableCell>
                                                 <TableCell>{row.personName || <span className="text-muted-foreground italic">No encontrado</span>}</TableCell>
-                                                <TableCell className="text-xs">
+                                                <TableCell className="text-xs text-center">
                                                     {row.originName} → {row.destinationName}
                                                 </TableCell>
-                                                <TableCell>
+                                                <TableCell className="text-center">
                                                     {row.isValid ? (
-                                                        <Check className="w-4 h-4 text-green-500" />
+                                                        <div className="flex justify-center"><Check className="w-4 h-4 text-green-500" /></div>
                                                     ) : (
                                                         <span className="text-xs text-red-500 font-medium">{row.error}</span>
                                                     )}
@@ -574,14 +574,14 @@ export default function BookingManager({ itinerary }: BookingManagerProps) {
                 </DialogContent>
             </Dialog>
 
-            <div className="border rounded-md">
+            <div className="border rounded-md overflow-x-auto">
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Pasajero</TableHead>
-                            <TableHead>Tramo</TableHead>
-                            <TableHead>Estado</TableHead>
-                            <TableHead className="w-[100px] text-right">Acciones</TableHead>
+                            <TableHead className="text-center">Pasajero</TableHead>
+                            <TableHead className="text-center">Tramo</TableHead>
+                            <TableHead className="text-center">Estado</TableHead>
+                            <TableHead className="w-[100px] text-center">Acciones</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -599,21 +599,21 @@ export default function BookingManager({ itinerary }: BookingManagerProps) {
                                         <div className="text-xs text-muted-foreground">{b.passenger?.rut_display}</div>
                                     </TableCell>
                                     <TableCell>
-                                        <div className="flex items-center gap-2 text-sm">
+                                        <div className="flex items-center justify-center gap-2 text-sm">
                                             <span>{b.origin_stop?.location?.name}</span>
                                             <span className="text-muted-foreground">→</span>
                                             <span>{b.destination_stop?.location?.name}</span>
                                         </div>
                                     </TableCell>
-                                    <TableCell>
+                                    <TableCell className="text-center">
                                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                             {b.status === 'confirmed' ? 'Confirmada' :
                                                 b.status === 'cancelled' ? 'Cancelada' :
                                                     b.status === 'pending' ? 'Pendiente' : b.status}
                                         </span>
                                     </TableCell>
-                                    <TableCell className="text-right">
-                                        <div className="flex justify-end gap-2">
+                                    <TableCell className="text-center">
+                                        <div className="flex justify-center gap-2">
                                             <Button
                                                 variant="ghost"
                                                 size="sm"

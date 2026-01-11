@@ -96,14 +96,14 @@ export default function RolesTable({ initialUsers }: RolesTableProps) {
     };
 
     return (
-        <div className="border rounded-md">
+        <div className="border rounded-md overflow-x-auto">
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Rol Actual</TableHead>
-                        <TableHead>Cambiar Rol</TableHead>
-                        <TableHead>Registrado</TableHead>
+                        <TableHead className="text-center">Email</TableHead>
+                        <TableHead className="text-center">Rol Actual</TableHead>
+                        <TableHead className="text-center">Cambiar Rol</TableHead>
+                        <TableHead className="text-center">Registrado</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -121,27 +121,29 @@ export default function RolesTable({ initialUsers }: RolesTableProps) {
                         users.map((user) => (
                             <TableRow key={user.id}>
                                 <TableCell className="font-medium">{user.email || 'Email no disponible'}</TableCell>
-                                <TableCell>
+                                <TableCell className="text-center">
                                     <Badge variant="outline" className={getRoleColor(user.role)}>
                                         {user.role}
                                     </Badge>
                                 </TableCell>
-                                <TableCell>
-                                    <Select
-                                        defaultValue={user.role}
-                                        onValueChange={(val) => updateRole(user.user_id, val as AppRole)}
-                                    >
-                                        <SelectTrigger className="w-[180px]">
-                                            <SelectValue placeholder="Seleccionar rol" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value={ROLES.SYSADMIN}>System Admin</SelectItem>
-                                            <SelectItem value={ROLES.MANAGER}>Logistics Manager</SelectItem>
-                                            <SelectItem value={ROLES.OPERATOR}>Operator</SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                <TableCell className="text-center">
+                                    <div className="flex justify-center">
+                                        <Select
+                                            defaultValue={user.role}
+                                            onValueChange={(val) => updateRole(user.user_id, val as AppRole)}
+                                        >
+                                            <SelectTrigger className="w-[180px]">
+                                                <SelectValue placeholder="Seleccionar rol" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value={ROLES.SYSADMIN}>System Admin</SelectItem>
+                                                <SelectItem value={ROLES.MANAGER}>Logistics Manager</SelectItem>
+                                                <SelectItem value={ROLES.OPERATOR}>Operator</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
                                 </TableCell>
-                                <TableCell className="text-muted-foreground text-sm">
+                                <TableCell className="text-center text-muted-foreground text-sm">
                                     {formatDate(user.created_at)}
                                 </TableCell>
                             </TableRow>

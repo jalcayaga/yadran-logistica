@@ -117,15 +117,15 @@ export default function ItineraryTable() {
                 </Dialog>
             </div>
 
-            <div className="border rounded-md">
+            <div className="border rounded-md overflow-x-auto">
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Fecha</TableHead>
-                            <TableHead>Nave</TableHead>
-                            <TableHead>Ruta / Paradas</TableHead>
-                            <TableHead>Estado</TableHead>
-                            <TableHead>Acciones</TableHead>
+                            <TableHead className="text-center">Fecha</TableHead>
+                            <TableHead className="text-center">Nave</TableHead>
+                            <TableHead className="text-center">Ruta / Paradas</TableHead>
+                            <TableHead className="text-center">Estado</TableHead>
+                            <TableHead className="text-center">Acciones</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -142,20 +142,20 @@ export default function ItineraryTable() {
                         ) : (
                             itineraries.map((itin) => (
                                 <TableRow key={itin.id}>
-                                    <TableCell>
-                                        <div className="flex flex-col">
+                                    <TableCell className="text-center">
+                                        <div className="flex flex-col items-center">
                                             <span className="font-medium flex items-center gap-1"><Calendar className="w-3 h-3" /> {formatDate(itin.date)}</span>
                                             <span className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="w-3 h-3" /> {itin.start_time}</span>
                                         </div>
                                     </TableCell>
-                                    <TableCell>
-                                        <div className="flex flex-col">
+                                    <TableCell className="text-center">
+                                        <div className="flex flex-col items-center">
                                             <span className="font-medium flex items-center gap-1"><Ship className="w-3 h-3" /> {itin.vessel?.name || 'N/A'}</span>
                                             <span className="text-xs text-muted-foreground">Cap: {itin.vessel?.capacity || 0} pax</span>
                                         </div>
                                     </TableCell>
-                                    <TableCell>
-                                        <div className="flex flex-wrap gap-1 items-center text-sm">
+                                    <TableCell className="text-center">
+                                        <div className="flex flex-wrap gap-1 items-center justify-center text-sm">
                                             {itin.stops?.sort((a, b) => a.stop_order - b.stop_order).map((stop, idx) => (
                                                 <div key={stop.id} className="flex items-center">
                                                     {idx > 0 && <span className="mx-1 text-muted-foreground">→</span>}
@@ -164,7 +164,7 @@ export default function ItineraryTable() {
                                             ))}
                                         </div>
                                     </TableCell>
-                                    <TableCell>
+                                    <TableCell className="text-center">
                                         <Badge variant="outline" className={getStatusColor(itin.status)}>
                                             {itin.status === 'scheduled' ? 'Programado' :
                                                 itin.status === 'in_progress' ? 'En Curso' :
@@ -172,8 +172,8 @@ export default function ItineraryTable() {
                                                         itin.status === 'suspended' ? 'Suspendido' : 'Cancelado'}
                                         </Badge>
                                     </TableCell>
-                                    <TableCell>
-                                        <div className="flex gap-2">
+                                    <TableCell className="text-center">
+                                        <div className="flex gap-2 justify-center">
                                             <Button variant="ghost" size="sm" onClick={() => setEditingItinerary(itin)} title="Editar">
                                                 <Pencil className="w-4 h-4 text-blue-500" />
                                             </Button>
