@@ -17,6 +17,7 @@ import { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { Plus, Trash2, ArrowDown } from 'lucide-react';
 import { Card, CardContent } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
 
 type ItineraryFormData = z.input<typeof itinerarySchema>;
 
@@ -28,6 +29,7 @@ interface ItineraryFormProps {
 export default function ItineraryForm({ onSuccess, initialData }: ItineraryFormProps) {
     const [loading, setLoading] = useState(false);
     const [globalError, setGlobalError] = useState('');
+    const { toast } = useToast();
 
     // Catalogs
     const [vessels, setVessels] = useState<{ id: string, name: string }[]>([]);
@@ -140,6 +142,13 @@ export default function ItineraryForm({ onSuccess, initialData }: ItineraryFormP
                 }
                 throw new Error(body.error || 'Error saving itinerary');
             }
+
+            // Success toast
+            toast({
+                title: initialData?.id ? "Itinerario actualizado" : "Itinerario creado",
+                description: "Los cambios se guardaron correctamente.",
+                className: "bg-green-500 text-white border-green-600"
+            });
 
             onSuccess();
         } catch (err: any) {

@@ -6,6 +6,7 @@ import { getUserRole, ROLES } from '@/utils/roles';
 import { redirect } from 'next/navigation';
 
 import { UserNav } from '@/components/UserNav';
+import { Toaster } from '@/components/ui/toaster';
 
 
 export const dynamic = 'force-dynamic';
@@ -49,6 +50,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                     {children}
                 </main>
             </div>
+            <Toaster />
         </div>
     )
 }
