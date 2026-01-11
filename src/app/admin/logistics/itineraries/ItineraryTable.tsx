@@ -11,8 +11,9 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { Button } from '@/components/ui/button';
-import { Plus, Calendar, Clock, Ship } from 'lucide-react';
+import { Plus, Calendar, Clock, Ship, Trash2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import ItineraryForm from './ItineraryForm';
 import BookingManager from './BookingManager';
 import { formatDate } from "@/utils/formatters";
@@ -34,6 +35,7 @@ export default function ItineraryTable() {
     const [loading, setLoading] = useState(true);
     const [isOpen, setIsOpen] = useState(false);
     const [managingItinerary, setManagingItinerary] = useState<ItineraryWithRelations | null>(null);
+    const [deletingItinerary, setDeletingItinerary] = useState<ItineraryWithRelations | null>(null);
 
     const fetchItineraries = async () => {
         setLoading(true);
@@ -53,6 +55,22 @@ export default function ItineraryTable() {
     useEffect(() => {
         fetchItineraries();
     }, []);
+
+    const handleDelete = async () => {
+        if (!deletingItinerary) return;
+        try {
+            const res = await fetch(`/api/itineraries/${deletingItinerary.id}`, { method: 'DELETE' });
+            if (res.ok) {
+                fetchItineraries();
+                setDeletingItinerary(null);
+            } else {
+                alert('Error al eliminar itinerario. Asegúrese de que no tenga reservas asociadas o contacte soporte.');
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Error inesperado al eliminar.');
+        }
+    };
 
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -141,9 +159,14 @@ export default function ItineraryTable() {
                                         </Badge>
                                     </TableCell>
                                     <TableCell>
-                                        <Button variant="outline" size="sm" onClick={() => setManagingItinerary(itin)}>
-                                            Gestionar
-                                        </Button>
+                                        <div className="flex gap-2">
+                                            <Button variant="outline" size="sm" onClick={() => setManagingItinerary(itin)}>
+                                                Gestionar
+                                            </Button>
+                                            <Button variant="ghost" size="sm" onClick={() => setDeletingItinerary(itin)}>
+                                                <Trash2 className="w-4 h-4 text-red-500" />
+                                            </Button>
+                                        </div>
                                     </TableCell>
                                 </TableRow>
                             ))
@@ -160,6 +183,22 @@ export default function ItineraryTable() {
                     {managingItinerary && <BookingManager itinerary={managingItinerary} />}
                 </DialogContent>
             </Dialog>
+
+            <AlertDialog open={!!deletingItinerary} onOpenChange={(open) => !open && setDeletingItinerary(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>¿Eliminar Itinerario?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            ¿Estás seguro de eliminar el itinerario de <strong>{deletingItinerary?.vessel?.name}</strong> del <strong>{deletingItinerary && formatDate(deletingItinerary.date)}</strong>?
+                            Esta acción no se puede deshacer y borrará todas las paradas asociadas.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">Eliminar</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }
