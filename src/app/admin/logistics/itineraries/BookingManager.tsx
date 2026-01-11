@@ -100,10 +100,11 @@ export default function BookingManager({ itinerary }: BookingManagerProps) {
                 }
 
                 results.data.forEach((row: any) => {
-                    // Mapeo flexible de columnas (Excel suele traer mayusculas/tildes)
-                    // Keys expected: RUT, CENTRO (o DESTINO)
+                    // Mapeo flexible de columnas
+                    // Keys expected: RUT, ORIGEN, DESTINO (o CENTRO)
                     const rut = row['RUT'] || row['rut'] || row['Rut'] || '';
-                    const destRaw = row['CENTRO'] || row['centro'] || row['DESTINO'] || row['destino'] || row['Centro'] || '';
+                    const destRaw = row['DESTINO'] || row['destino'] || row['Destino'] || row['CENTRO'] || row['centro'] || row['Centro'] || '';
+                    const originRaw = row['ORIGEN'] || row['origen'] || row['Origen'] || '';
 
                     if (!rut || !destRaw) return; // Skip empty rows
 
@@ -111,31 +112,58 @@ export default function BookingManager({ itinerary }: BookingManagerProps) {
                     const cleanRut = rut.replace(/\./g, '').replace(/-/g, '').toUpperCase();
                     const person = people.find(p => p.rut_normalized.replace(/\./g, '').replace(/-/g, '').toUpperCase().includes(cleanRut)); // Loose match logic
 
-                    // 2. Find Destination Stop
-                    // Attempt to fuzzy match or exact match the location name
-                    const destinationStop = sortedStops.find((s: any) =>
-                        s.location.name.toLowerCase().trim() === destRaw.toLowerCase().trim() ||
-                        s.location.code.toLowerCase().trim() === destRaw.toLowerCase().trim()
+                    // 2. Map Locations
+                    // Function to find stop by name/code
+                    const findStop = (name: string) => sortedStops.find((s: any) =>
+                        s.location.name.toLowerCase().trim() === name.toLowerCase().trim() ||
+                        s.location.code.toLowerCase().trim() === name.toLowerCase().trim()
                     );
 
+                    let originStop = defaultOrigin;
+                    let destinationStop = null;
                     let isValid = true;
                     let errorMsg = '';
 
-                    if (!person) { isValid = false; errorMsg += 'Pasajero no existe en sistema. '; }
-                    if (!destinationStop) { isValid = false; errorMsg += `Centro '${destRaw}' no es parte de este viaje. `; }
+                    // Resolve Origin
+                    if (originRaw) {
+                        const foundOrigin = findStop(originRaw);
+                        if (foundOrigin) {
+                            originStop = foundOrigin;
+                        } else {
+                            isValid = false;
+                            errorMsg += `Origen '${originRaw}' no es parte de este viaje. `;
+                        }
+                    }
 
-                    // Prevent circular route (Origin == Destination)
-                    if (destinationStop?.id === defaultOrigin.id) {
+                    // Resolve Destination
+                    const foundDest = findStop(destRaw);
+                    if (foundDest) {
+                        destinationStop = foundDest;
+                    } else {
                         isValid = false;
-                        errorMsg += 'El destino es igual al origen. ';
+                        errorMsg += `Destino '${destRaw}' no es parte de este viaje. `;
+                    }
+
+                    if (!person) { isValid = false; errorMsg += 'Pasajero no existe en sistema. '; }
+
+                    // Validate segment logic
+                    if (originStop && destinationStop) {
+                        if (destinationStop.id === originStop.id) {
+                            isValid = false;
+                            errorMsg += 'Origen y Destino son iguales. ';
+                        }
+                        if (destinationStop.stop_order <= originStop.stop_order) {
+                            isValid = false;
+                            errorMsg += 'El destino es anterior al origen. ';
+                        }
                     }
 
                     rows.push({
                         rut,
                         personName: person ? `${person.first_name} ${person.last_name}` : undefined,
                         personId: person?.id,
-                        originName: defaultOrigin.location.name,
-                        originId: defaultOrigin.id,
+                        originName: originStop?.location.name || originRaw || 'Desconocido',
+                        originId: originStop?.id,
                         destinationName: destRaw,
                         destinationId: destinationStop?.id,
                         isValid,
@@ -389,7 +417,7 @@ export default function BookingManager({ itinerary }: BookingManagerProps) {
                             <div className="flex flex-col items-center gap-2 py-4">
                                 <FileSpreadsheet className="w-8 h-8 text-muted-foreground" />
                                 <span className="text-sm font-medium">Arrastra un archivo CSV o haz clic para buscar</span>
-                                <span className="text-xs text-muted-foreground">Formato: RUT, CENTRO (El nombre es opcional)</span>
+                                <p className="text-sm text-muted-foreground mt-2">Formato: RUT, ORIGEN, DESTINO (Coincidir con paradas)</p>
                             </div>
                         </div>
 
