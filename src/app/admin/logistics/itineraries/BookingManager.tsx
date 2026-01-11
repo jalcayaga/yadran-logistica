@@ -315,7 +315,7 @@ export default function BookingManager({ itinerary }: BookingManagerProps) {
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center bg-white p-4 rounded-lg border shadow-sm">
+            <div className="flex justify-between items-center bg-card p-4 rounded-lg border shadow-sm">
                 <div className="flex gap-2">
                     <Button onClick={openNewBooking} className="shadow-sm">
                         <Plus className="w-4 h-4 mr-2" />
@@ -379,7 +379,7 @@ export default function BookingManager({ itinerary }: BookingManagerProps) {
                     </DialogHeader>
 
                     <div className="space-y-4">
-                        <div className="p-4 border-2 border-dashed rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors text-center cursor-pointer relative">
+                        <div className="p-4 border-2 border-dashed rounded-lg bg-gray-50 hover:bg-gray-100 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:border-zinc-700 transition-colors text-center cursor-pointer relative">
                             <input
                                 type="file"
                                 accept=".csv"
@@ -394,7 +394,7 @@ export default function BookingManager({ itinerary }: BookingManagerProps) {
                         </div>
 
                         {bulkError && (
-                            <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm flex items-center gap-2">
+                            <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-3 rounded-md text-sm flex items-center gap-2">
                                 <AlertCircle className="w-4 h-4" /> {bulkError}
                             </div>
                         )}
@@ -453,7 +453,7 @@ export default function BookingManager({ itinerary }: BookingManagerProps) {
 
                     <div className="space-y-4 py-4">
                         {error && (
-                            <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm flex items-center gap-2">
+                            <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-3 rounded-md text-sm flex items-center gap-2">
                                 <AlertCircle className="w-4 h-4" /> {error}
                             </div>
                         )}
