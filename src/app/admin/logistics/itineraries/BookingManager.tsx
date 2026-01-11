@@ -9,12 +9,13 @@ import {
 } from "@/components/ui/select"
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Plus, Trash2, AlertCircle, FileText, Pencil, Check, ChevronsUpDown } from 'lucide-react';
+import { Plus, Trash2, AlertCircle, FileText, Pencil, Check, ChevronsUpDown, Upload, FileSpreadsheet } from 'lucide-react';
 import { Itinerary, Person } from '@/utils/zod_schemas';
 import { ManifestDocument } from '@/components/pdf/ManifestDocument';
 import { useToast } from "@/hooks/use-toast";
 import { formatDate } from "@/utils/formatters";
 import { cn } from "@/lib/utils";
+import Papa from 'papaparse';
 import {
     Command,
     CommandEmpty,
@@ -42,6 +43,18 @@ interface Booking {
     status: string;
 }
 
+interface BulkRow {
+    rut: string;
+    personName?: string;
+    personId?: string;
+    originName: string;
+    originId?: string;
+    destinationName: string;
+    destinationId?: string;
+    isValid: boolean;
+    error?: string;
+}
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 export default function BookingManager({ itinerary }: BookingManagerProps) {
@@ -52,6 +65,11 @@ export default function BookingManager({ itinerary }: BookingManagerProps) {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const { toast } = useToast();
 
+    // Bulk Upload State
+    const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
+    const [parsedRows, setParsedRows] = useState<BulkRow[]>([]);
+    const [bulkError, setBulkError] = useState('');
+
     // Form State
     const [selectedPassenger, setSelectedPassenger] = useState<string>('');
     const [selectedOrigin, setSelectedOrigin] = useState<string>('');
@@ -60,6 +78,118 @@ export default function BookingManager({ itinerary }: BookingManagerProps) {
     const [openCombobox, setOpenCombobox] = useState(false);
 
     const sortedStops = itinerary.stops?.sort((a: any, b: any) => a.stop_order - b.stop_order) || [];
+
+    const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        setBulkError('');
+        setParsedRows([]);
+
+        Papa.parse(file, {
+            header: true,
+            skipEmptyLines: true,
+            complete: (results) => {
+                const rows: BulkRow[] = [];
+                // Expected headers: RUT, ORIGEN, DESTINO  (Case insensitive ideally, but strict for now)
+
+                results.data.forEach((row: any) => {
+                    const rut = row['RUT'] || row['rut'] || '';
+                    const originName = row['ORIGEN'] || row['origen'] || '';
+                    const destinationName = row['DESTINO'] || row['destino'] || '';
+
+                    if (!rut || !originName || !destinationName) return; // Skip invalid rows or add error
+
+                    // 1. Find Person
+                    const cleanRut = rut.replace(/\./g, '').replace(/-/g, '').toUpperCase();
+                    const person = people.find(p => p.rut_normalized.replace(/\./g, '').replace(/-/g, '').toUpperCase().includes(cleanRut)); // Loose match logic
+
+                    // 2. Find Stops
+                    const originStop = sortedStops.find((s: any) => s.location.name.toLowerCase().trim() === originName.toLowerCase().trim());
+                    const destinationStop = sortedStops.find((s: any) => s.location.name.toLowerCase().trim() === destinationName.toLowerCase().trim());
+
+                    let isValid = true;
+                    let errorMsg = '';
+
+                    if (!person) { isValid = false; errorMsg += 'Pasajero no encontrado. '; }
+                    if (!originStop) { isValid = false; errorMsg += 'Origen desconocido. '; }
+                    if (!destinationStop) { isValid = false; errorMsg += 'Destino desconocido. '; }
+
+                    rows.push({
+                        rut,
+                        personName: person ? `${person.first_name} ${person.last_name}` : undefined,
+                        personId: person?.id,
+                        originName,
+                        originId: originStop?.id,
+                        destinationName,
+                        destinationId: destinationStop?.id,
+                        isValid,
+                        error: errorMsg
+                    });
+                });
+
+                setParsedRows(rows);
+            },
+            error: (err) => {
+                setBulkError('Error al leer CSV: ' + err.message);
+            }
+        });
+    };
+
+    const confirmBulkUpload = async () => {
+        const validRows = parsedRows.filter(r => r.isValid);
+        if (validRows.length === 0) return;
+
+        setLoading(true);
+        try {
+            // Sequential upload to avoid overwhelming server or hitting race conditions
+            let successCount = 0;
+            let errors = [];
+
+            for (const row of validRows) {
+                const res = await fetch('/api/bookings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        itinerary_id: itinerary.id,
+                        passenger_id: row.personId,
+                        origin_stop_id: row.originId,
+                        destination_stop_id: row.destinationId
+                    })
+                });
+
+                if (res.ok) {
+                    successCount++;
+                } else {
+                    const d = await res.json();
+                    errors.push(`RUT ${row.rut}: ${d.error || 'Fallo desconocido'}`);
+                }
+            }
+
+            fetchBookings();
+            setBulkDialogOpen(false);
+            setParsedRows([]);
+
+            if (errors.length > 0) {
+                toast({
+                    variant: "destructive",
+                    title: `Carga parcial: ${successCount} exitosos`,
+                    description: `Errores: ${errors.slice(0, 3).join(', ')} ...`,
+                });
+            } else {
+                toast({
+                    title: "Carga Masiva Exitosa",
+                    description: `Se crearon ${successCount} reservas correctamente.`,
+                    className: "bg-green-500 text-white"
+                });
+            }
+
+        } catch (e: any) {
+            setBulkError(e.message);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const fetchBookings = async () => {
         const res = await fetch(`/api/bookings?itinerary_id=${itinerary.id}`);
@@ -166,11 +296,21 @@ export default function BookingManager({ itinerary }: BookingManagerProps) {
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <Button onClick={openNewBooking}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Nueva Reserva
-                </Button>
+            <div className="flex justify-between items-center bg-white p-4 rounded-lg border shadow-sm">
+                <div className="flex gap-2">
+                    <Button onClick={openNewBooking} className="shadow-sm">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Nueva Reserva
+                    </Button>
+                    <Button
+                        variant="secondary"
+                        onClick={() => setBulkDialogOpen(true)}
+                        className="shadow-sm border-input"
+                    >
+                        <Upload className="w-4 h-4 mr-2" />
+                        Carga Masiva (CSV)
+                    </Button>
+                </div>
 
                 {bookings.length > 0 && (
                     <Button
@@ -211,6 +351,80 @@ export default function BookingManager({ itinerary }: BookingManagerProps) {
                     </Button>
                 )}
             </div>
+
+            {/* Bulk Upload Dialog */}
+            <Dialog open={bulkDialogOpen} onOpenChange={setBulkDialogOpen}>
+                <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle>Carga Masiva de Pasajeros (CSV)</DialogTitle>
+                    </DialogHeader>
+
+                    <div className="space-y-4">
+                        <div className="p-4 border-2 border-dashed rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors text-center cursor-pointer relative">
+                            <input
+                                type="file"
+                                accept=".csv"
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                onChange={handleFileUpload}
+                            />
+                            <div className="flex flex-col items-center gap-2 py-4">
+                                <FileSpreadsheet className="w-8 h-8 text-muted-foreground" />
+                                <span className="text-sm font-medium">Arrastra un archivo CSV o haz clic para buscar</span>
+                                <span className="text-xs text-muted-foreground">Formato: RUT, Nombre (opc), Origen, Destino</span>
+                            </div>
+                        </div>
+
+                        {bulkError && (
+                            <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm flex items-center gap-2">
+                                <AlertCircle className="w-4 h-4" /> {bulkError}
+                            </div>
+                        )}
+
+                        {parsedRows.length > 0 && (
+                            <div className="border rounded-md">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>RUT</TableHead>
+                                            <TableHead>Pasajero</TableHead>
+                                            <TableHead>Tramo</TableHead>
+                                            <TableHead className="w-[100px]">Estado</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {parsedRows.map((row, idx) => (
+                                            <TableRow key={idx}>
+                                                <TableCell>{row.rut}</TableCell>
+                                                <TableCell>{row.personName || <span className="text-muted-foreground italic">No encontrado</span>}</TableCell>
+                                                <TableCell className="text-xs">
+                                                    {row.originName} → {row.destinationName}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {row.isValid ? (
+                                                        <Check className="w-4 h-4 text-green-500" />
+                                                    ) : (
+                                                        <span className="text-xs text-red-500 font-medium">{row.error}</span>
+                                                    )}
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        )}
+
+                        <div className="flex justify-end gap-2 pt-4">
+                            <Button variant="ghost" onClick={() => setBulkDialogOpen(false)}>Cancelar</Button>
+                            <Button
+                                onClick={confirmBulkUpload}
+                                disabled={loading || parsedRows.filter(r => r.isValid).length === 0}
+                            >
+                                {loading ? 'Procesando...' : `Cargar ${parsedRows.filter(r => r.isValid).length} reservas`}
+                            </Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
 
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogContent>
