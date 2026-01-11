@@ -178,7 +178,7 @@ export default function PeopleTable() {
                                     <TableCell>{formatRut(person.rut_normalized)}</TableCell>
                                     <TableCell>{person.company}</TableCell>
                                     <TableCell>{person.job_title || '-'}</TableCell>
-                                    <TableCell>{formatPhone(person.phone_e164)}</TableCell>
+                                    <TableCell>{formatPhone(person.phone_e164 || null)}</TableCell>
                                     <TableCell>
                                         <div className="flex gap-1">
                                             <Button
