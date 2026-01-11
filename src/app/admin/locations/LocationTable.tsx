@@ -14,6 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, ArrowUpDown, Pencil, Trash2 } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import LocationForm from './LocationForm';
@@ -27,6 +28,7 @@ export default function LocationTable() {
     const [isOpen, setIsOpen] = useState(false);
     const [editingLocation, setEditingLocation] = useState<Location | null>(null);
     const [deletingLocation, setDeletingLocation] = useState<Location | null>(null);
+    const [activeTab, setActiveTab] = useState('centers');
 
     const [searchTerm, setSearchTerm] = useState('');
     const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: 'asc' | 'desc' } | null>(null);
@@ -38,7 +40,7 @@ export default function LocationTable() {
             if (res.ok) {
                 const data = await res.json();
                 setLocations(data);
-                setFilteredLocations(data);
+                // Initial filter will be handled by useEffect
             }
         } catch (error) {
             console.error(error);
@@ -54,6 +56,14 @@ export default function LocationTable() {
     useEffect(() => {
         let result = [...locations];
 
+        // 1. Filter by Tab
+        if (activeTab === 'centers') {
+            result = result.filter(l => ['center', 'base'].includes(l.type));
+        } else if (activeTab === 'ports') {
+            result = result.filter(l => ['port', 'city', 'other'].includes(l.type));
+        }
+
+        // 2. Filter by Search
         if (searchTerm) {
             const lowerTerm = searchTerm.toLowerCase();
             result = result.filter(l =>
@@ -63,6 +73,7 @@ export default function LocationTable() {
             );
         }
 
+        // 3. Sort
         if (sortConfig) {
             result.sort((a, b) => {
                 const valA = (a[sortConfig.key] || '').toString().toLowerCase();
@@ -75,7 +86,7 @@ export default function LocationTable() {
         }
 
         setFilteredLocations(result);
-    }, [locations, searchTerm, sortConfig]);
+    }, [locations, searchTerm, sortConfig, activeTab]);
 
     const handleSort = (key: SortKey) => {
         let direction: 'asc' | 'desc' = 'asc';
@@ -103,78 +114,89 @@ export default function LocationTable() {
 
     return (
         <div>
-            <div className="flex justify-between items-center mb-6 gap-4">
-                <div className="flex-1 max-w-sm">
-                    <Input
-                        placeholder="Buscar por nombre, código o tipo..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                </div>
-                <Dialog open={isOpen} onOpenChange={setIsOpen}>
-                    <DialogTrigger asChild>
-                        <Button><Plus className="mr-2 h-4 w-4" /> Nueva Ubicación</Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Agregar Ubicación</DialogTitle>
-                        </DialogHeader>
-                        <div className="py-4">
-                            <LocationForm onSuccess={() => { setIsOpen(false); fetchLocations(); }} />
-                        </div>
-                    </DialogContent>
-                </Dialog>
-            </div>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                    <TabsList>
+                        <TabsTrigger value="centers">Centros</TabsTrigger>
+                        <TabsTrigger value="ports">Puertos y Muelles</TabsTrigger>
+                        <TabsTrigger value="all">Ver Todos</TabsTrigger>
+                    </TabsList>
 
-            <div className="border rounded-md">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead onClick={() => handleSort('code')} className="cursor-pointer hover:bg-muted/50">
-                                Código <ArrowUpDown className="inline ml-1 h-3 w-3" />
-                            </TableHead>
-                            <TableHead onClick={() => handleSort('name')} className="cursor-pointer hover:bg-muted/50">
-                                Nombre <ArrowUpDown className="inline ml-1 h-3 w-3" />
-                            </TableHead>
-                            <TableHead onClick={() => handleSort('type')} className="cursor-pointer hover:bg-muted/50">
-                                Tipo <ArrowUpDown className="inline ml-1 h-3 w-3" />
-                            </TableHead>
-                            <TableHead className="w-[100px]">Acciones</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {loading ? (
+                    <div className="flex items-center gap-2 w-full md:w-auto">
+                        <div className="relative w-full md:w-64">
+                            <Input
+                                placeholder="Buscar..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full"
+                            />
+                        </div>
+                        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+                            <DialogTrigger asChild>
+                                <Button><Plus className="mr-2 h-4 w-4" /> Nuevo</Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Agregar Ubicación</DialogTitle>
+                                </DialogHeader>
+                                <div className="py-4">
+                                    <LocationForm onSuccess={() => { setIsOpen(false); fetchLocations(); }} />
+                                </div>
+                            </DialogContent>
+                        </Dialog>
+                    </div>
+                </div>
+
+                <div className="border rounded-md">
+                    <Table>
+                        <TableHeader>
                             <TableRow>
-                                <TableCell colSpan={4} className="text-center py-8">Cargando...</TableCell>
+                                <TableHead onClick={() => handleSort('code')} className="cursor-pointer hover:bg-muted/50">
+                                    Código <ArrowUpDown className="inline ml-1 h-3 w-3" />
+                                </TableHead>
+                                <TableHead onClick={() => handleSort('name')} className="cursor-pointer hover:bg-muted/50">
+                                    Nombre <ArrowUpDown className="inline ml-1 h-3 w-3" />
+                                </TableHead>
+                                <TableHead onClick={() => handleSort('type')} className="cursor-pointer hover:bg-muted/50">
+                                    Tipo <ArrowUpDown className="inline ml-1 h-3 w-3" />
+                                </TableHead>
+                                <TableHead className="w-[100px]">Acciones</TableHead>
                             </TableRow>
-                        ) : filteredLocations.length === 0 ? (
-                            <TableRow>
-                                <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
-                                    {searchTerm ? "No se encontraron resultados" : "No hay ubicaciones registradas."}
-                                </TableCell>
-                            </TableRow>
-                        ) : (
-                            filteredLocations.map((loc) => (
-                                <TableRow key={loc.id}>
-                                    <TableCell className="font-mono text-xs">{loc.code}</TableCell>
-                                    <TableCell className="font-medium">{loc.name}</TableCell>
-                                    <TableCell><span className="capitalize">{translateLocationType(loc.type)}</span></TableCell>
-                                    <TableCell>
-                                        <div className="flex gap-1">
-                                            <Button variant="ghost" size="sm" onClick={() => setEditingLocation(loc)}>
-                                                <Pencil className="h-4 w-4" />
-                                            </Button>
-                                            <Button variant="ghost" size="sm" onClick={() => setDeletingLocation(loc)}>
-                                                <Trash2 className="h-4 w-4 text-red-500" />
-                                            </Button>
-                                        </div>
+                        </TableHeader>
+                        <TableBody>
+                            {loading ? (
+                                <TableRow>
+                                    <TableCell colSpan={4} className="text-center py-8">Cargando...</TableCell>
+                                </TableRow>
+                            ) : filteredLocations.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                                        {searchTerm ? "No se encontraron resultados" : "No hay ubicaciones en esta categoría."}
                                     </TableCell>
                                 </TableRow>
-                            ))
-                        )}
-                    </TableBody>
-                </Table>
-            </div>
+                            ) : (
+                                filteredLocations.map((loc) => (
+                                    <TableRow key={loc.id}>
+                                        <TableCell className="font-mono text-xs">{loc.code}</TableCell>
+                                        <TableCell className="font-medium">{loc.name}</TableCell>
+                                        <TableCell><span className="capitalize">{translateLocationType(loc.type)}</span></TableCell>
+                                        <TableCell>
+                                            <div className="flex gap-1">
+                                                <Button variant="ghost" size="sm" onClick={() => setEditingLocation(loc)}>
+                                                    <Pencil className="h-4 w-4" />
+                                                </Button>
+                                                <Button variant="ghost" size="sm" onClick={() => setDeletingLocation(loc)}>
+                                                    <Trash2 className="h-4 w-4 text-red-500" />
+                                                </Button>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            )}
+                        </TableBody>
+                    </Table>
+                </div>
+            </Tabs>
 
             <Dialog open={!!editingLocation} onOpenChange={(open: boolean) => !open && setEditingLocation(null)}>
                 <DialogContent>
