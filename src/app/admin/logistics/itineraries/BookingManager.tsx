@@ -599,9 +599,21 @@ export default function BookingManager({ itinerary }: BookingManagerProps) {
                                                 className="text-red-500 hover:text-red-700 hover:bg-red-50"
                                                 onClick={async () => {
                                                     if (!confirm('¿Eliminar reserva?')) return;
-                                                    await fetch(`/api/bookings/${b.id}`, { method: 'DELETE' });
-                                                    toast({ title: "Reserva eliminada" });
-                                                    fetchBookings();
+                                                    try {
+                                                        const res = await fetch(`/api/bookings/${b.id}`, { method: 'DELETE' });
+                                                        if (!res.ok) {
+                                                            const err = await res.json();
+                                                            throw new Error(err.error || 'Error al eliminar');
+                                                        }
+                                                        toast({ title: "Reserva eliminada", className: "bg-green-500 text-white" });
+                                                        fetchBookings();
+                                                    } catch (e: any) {
+                                                        toast({
+                                                            variant: "destructive",
+                                                            title: "Error",
+                                                            description: e.message
+                                                        });
+                                                    }
                                                 }}
                                             >
                                                 <Trash2 className="w-4 h-4" />
