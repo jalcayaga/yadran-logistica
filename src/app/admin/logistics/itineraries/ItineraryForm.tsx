@@ -1,6 +1,6 @@
 'use client';
 
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { itinerarySchema, type Itinerary, type ItineraryStop } from '@/utils/zod_schemas';
 import { Button } from '@/components/ui/button';
@@ -181,32 +181,44 @@ export default function ItineraryForm({ onSuccess, initialData }: ItineraryFormP
                 </div>
                 <div className="space-y-2">
                     <Label>Nave Asignada</Label>
-                    <Select onValueChange={(val) => setValue('vessel_id', val)} defaultValue={watch('vessel_id')}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Seleccionar nave" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {vessels.map(v => (
-                                <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                    <Controller
+                        name="vessel_id"
+                        control={control}
+                        render={({ field }) => (
+                            <Select onValueChange={field.onChange} value={field.value}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Seleccionar nave" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {vessels.map(v => (
+                                        <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        )}
+                    />
                     {errors.vessel_id && <p className="text-red-500 text-xs">{errors.vessel_id.message}</p>}
                 </div>
                 <div className="space-y-2">
                     <Label>Estado</Label>
-                    <Select onValueChange={(val: any) => setValue('status', val)} defaultValue={watch('status')}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Estado actual" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="scheduled">Programado</SelectItem>
-                            <SelectItem value="in_progress">En Curso</SelectItem>
-                            <SelectItem value="completed">Finalizado</SelectItem>
-                            <SelectItem value="suspended" className="text-orange-600 font-medium">Suspendido</SelectItem>
-                            <SelectItem value="cancelled" className="text-red-600 font-medium">Cancelado</SelectItem>
-                        </SelectContent>
-                    </Select>
+                    <Controller
+                        name="status"
+                        control={control}
+                        render={({ field }) => (
+                            <Select onValueChange={field.onChange} value={field.value}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Estado actual" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="scheduled">Programado</SelectItem>
+                                    <SelectItem value="in_progress">En Curso</SelectItem>
+                                    <SelectItem value="completed">Finalizado</SelectItem>
+                                    <SelectItem value="suspended" className="text-orange-600 font-medium">Suspendido</SelectItem>
+                                    <SelectItem value="cancelled" className="text-red-600 font-medium">Cancelado</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        )}
+                    />
                     {errors.status && <p className="text-red-500 text-xs">{errors.status.message}</p>}
                 </div>
             </div>
