@@ -93,11 +93,9 @@ export default function LocationForm({ onSuccess, initialData }: LocationFormPro
                             <SelectValue placeholder="Selecciona tipo" />
                         </SelectTrigger>
                         <SelectContent>
-                            {LocationTypeEnum.options.map((opt) => (
-                                <SelectItem key={opt} value={opt}>
-                                    {translateLocationType(opt)}
-                                </SelectItem>
-                            ))}
+                            <SelectItem value="center">Centro</SelectItem>
+                            <SelectItem value="port">Puerto</SelectItem>
+                            <SelectItem value="other">Otros</SelectItem>
                         </SelectContent>
                     </Select>
                     {errors.type && <p className="text-red-500 text-xs">{errors.type.message}</p>}
