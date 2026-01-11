@@ -483,7 +483,7 @@ export default function BookingManager({ itinerary }: BookingManagerProps) {
                                                 {people.map((p) => (
                                                     <CommandItem
                                                         key={p.id}
-                                                        value={p.first_name + " " + p.last_name + " " + p.rut_display}
+                                                        value={p.first_name + " " + p.last_name + " " + p.rut_display + " " + p.rut_normalized}
                                                         onSelect={() => {
                                                             setSelectedPassenger(p.id!)
                                                             setOpenCombobox(false)
