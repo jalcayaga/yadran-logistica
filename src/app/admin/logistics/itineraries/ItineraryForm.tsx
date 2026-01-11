@@ -82,7 +82,45 @@ export default function ItineraryForm({ onSuccess, initialData }: ItineraryFormP
             stop_order: index
         }));
 
-        const payload = { ...data, stops };
+        // Deep compare stops to avoid triggering "Route Change" logic if not needed
+        let stopsChanged = true;
+
+        if (initialData?.stops && initialData.stops.length === stops.length) {
+            stopsChanged = false;
+            for (let i = 0; i < stops.length; i++) {
+                const s1 = initialData.stops[i];
+                const s2 = stops[i];
+
+                // Normalize times for comparison (sometimes they come with seconds, sometimes not)
+                const t1Arr = (s1.arrival_time || '').substring(0, 5);
+                const t2Arr = (s2.arrival_time || '').substring(0, 5);
+                const t1Dep = (s1.departure_time || '').substring(0, 5);
+                const t2Dep = (s2.departure_time || '').substring(0, 5);
+
+                const c1 = s1.location_id === s2.location_id;
+                const c2 = s1.stop_order === s2.stop_order;
+                const c3 = t1Arr === t2Arr;
+                const c4 = t1Dep === t2Dep;
+
+                if (!c1 || !c2 || !c3 || !c4) {
+                    // console.log("Stops Changed Detected at index", i);
+                    // console.log("Initial:", s1.location_id, s1.stop_order, t1Arr, t1Dep);
+                    // console.log("Current:", s2.location_id, s2.stop_order, t2Arr, t2Dep);
+                    // console.log("Diff:", { c1, c2, c3, c4 });
+                    stopsChanged = true;
+                    break;
+                }
+            }
+        }
+        // console.log("Final stopsChanged decision:", stopsChanged);
+
+        const payload: any = { ...data };
+        if (stopsChanged) {
+            payload.stops = stops;
+        } else {
+            // Remove stops from payload so backend doesn't try to delete/insert
+            delete payload.stops;
+        }
 
         try {
             const url = initialData?.id ? `/api/itineraries/${initialData.id}` : '/api/itineraries';
@@ -113,7 +151,10 @@ export default function ItineraryForm({ onSuccess, initialData }: ItineraryFormP
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {globalError && <div className="p-3 bg-red-100 text-red-700 rounded-md text-sm font-bold">{globalError}</div>}
+            {globalError && <div className="p-4 bg-red-600 text-white rounded-md text-sm font-medium shadow-sm flex items-center gap-2">
+                <span className="text-xl">⚠️</span>
+                {globalError}
+            </div>}
 
             {/* Header: Date, Time, Vessel */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-lg bg-gray-50/50">
