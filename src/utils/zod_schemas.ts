@@ -3,7 +3,7 @@ import { z } from 'zod';
 // --- Shared Validators ---
 const uuidSchema = z.string().uuid();
 const createdBySchema = uuidSchema.optional();
-const phoneE164Schema = z.string().regex(/^\+569\d{8}$/).nullable().optional(); // E.164 Chile mobile
+const phoneE164Schema = z.string().nullable().optional(); // Relaxed validation. Normalization happens on save.
 const rutSchema = z.string(); // We assume normalized RUT from UI
 
 // --- Enums ---

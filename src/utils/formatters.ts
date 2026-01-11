@@ -13,6 +13,30 @@ export function normalizeRut(rut: string): string {
     return clean;
 }
 
+export function normalizePhone(phone: string): string | null {
+    if (!phone) return null;
+
+    // Remove non-digits
+    let clean = phone.replace(/\D/g, '');
+
+    // If empty after cleaning, return null
+    if (!clean) return null;
+
+    // Chile Mobile logic (Start with 9, len 9 -> add 56)
+    if (clean.length === 9 && clean.startsWith('9')) {
+        return `56${clean}`;
+    }
+
+    // Already 569... (len 11) -> Keep
+    if (clean.length === 11 && clean.startsWith('569')) {
+        return clean;
+    }
+
+    // Fallback: If it looks like a number, save it. 
+    // Evolution API might fail if not correct, but we don't zero-out valid weird numbers.
+    return clean;
+}
+
 export const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-CL', {
         style: 'currency',

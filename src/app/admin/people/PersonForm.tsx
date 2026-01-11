@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { personSchema, type Person } from '@/utils/zod_schemas';
 import { Button } from '@/components/ui/button';
-import { normalizeRut } from '@/utils/formatters';
+import { normalizeRut, normalizePhone } from '@/utils/formatters';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useState } from 'react';
@@ -48,7 +48,8 @@ export default function PersonForm({ onSuccess, initialData }: PersonFormProps) 
         // Enforce normalization
         const cleanData = {
             ...data,
-            rut_normalized: normalizeRut(data.rut_normalized)
+            rut_normalized: normalizeRut(data.rut_normalized),
+            phone_e164: normalizePhone(data.phone_e164 || '')
         };
 
         try {
@@ -123,7 +124,7 @@ export default function PersonForm({ onSuccess, initialData }: PersonFormProps) 
                 <Label htmlFor="phone_e164">Celular (WhatsApp)</Label>
                 <Input id="phone_e164" placeholder="+56912345678" {...register('phone_e164')} />
                 {errors.phone_e164 && <p className="text-red-500 text-xs">{errors.phone_e164.message}</p>}
-                <p className="text-[10px] text-muted-foreground">Formato E.164: +569XXXXXXXX</p>
+                <p className="text-[10px] text-muted-foreground">Opcional. Se formateará automáticamente (ej: 912345678)</p>
             </div>
 
             <div className="flex justify-end gap-2 pt-4">
