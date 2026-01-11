@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/table"
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input'; // Search input
+import { formatPhone } from '@/utils/formatters';
 import { Plus, ArrowUpDown, Pencil, Trash2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -174,7 +175,15 @@ export default function PeopleTable() {
                                     <TableCell>{person.rut_display}</TableCell>
                                     <TableCell>{person.company}</TableCell>
                                     <TableCell>{person.job_title || '-'}</TableCell>
-                                    <TableCell>{person.phone_e164 || '-'}</TableCell>
+                                    import {formatRut, formatPhone} from '@/utils/formatters';
+
+                                    // ...
+
+                                    <TableCell className="font-medium">{person.last_name}</TableCell>
+                                    <TableCell>{person.rut_display}</TableCell>
+                                    <TableCell>{person.company}</TableCell>
+                                    <TableCell>{person.job_title || '-'}</TableCell>
+                                    <TableCell>{formatPhone(person.phone_e164)}</TableCell>
                                     <TableCell>
                                         <div className="flex gap-1">
                                             <Button

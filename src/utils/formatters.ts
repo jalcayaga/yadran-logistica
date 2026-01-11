@@ -36,6 +36,20 @@ export function formatRut(rut: string): string {
     return `${formattedBody}-${dv}`;
 }
 
+export function formatPhone(phone: string | null): string {
+    if (!phone) return '-';
+    // Clean it first
+    const clean = phone.replace(/\D/g, '');
+
+    // Format: 56 9 1234 5678 (Chile Mobile)
+    if (clean.length === 11 && clean.startsWith('569')) {
+        return `+56 9 ${clean.slice(3, 7)} ${clean.slice(7)}`;
+    }
+
+    // Return original with + if looks like a number
+    return `+${clean}`;
+}
+
 export function normalizePhone(phone: string): string | null {
     if (!phone) return null;
 
