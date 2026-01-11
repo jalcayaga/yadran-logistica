@@ -24,7 +24,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     const navLinks = (
         <div className="flex gap-4 md:gap-6 items-center overflow-x-auto text-sm">
             <Link href="/admin/logistics/itineraries" className="font-medium hover:text-primary whitespace-nowrap">Itinerarios</Link>
-            <Link href="/admin/people" className="font-medium hover:text-primary whitespace-nowrap">Personas</Link>
+            <Link href="/admin/people" className="font-medium hover:text-primary whitespace-nowrap">Pasajeros</Link>
             <Link href="/admin/locations" className="font-medium hover:text-primary whitespace-nowrap">Ubicaciones</Link>
             <Link href="/admin/operators" className="font-medium hover:text-primary whitespace-nowrap">Operadores</Link>
             <Link href="/admin/vessels" className="font-medium hover:text-primary whitespace-nowrap">Naves</Link>

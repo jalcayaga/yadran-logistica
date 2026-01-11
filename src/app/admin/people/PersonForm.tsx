@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { personSchema, type Person } from '@/utils/zod_schemas';
 import { Button } from '@/components/ui/button';
+import { normalizeRut } from '@/utils/formatters';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useState } from 'react';
@@ -44,6 +45,12 @@ export default function PersonForm({ onSuccess, initialData }: PersonFormProps) 
         setLoading(true);
         setGlobalError('');
 
+        // Enforce normalization
+        const cleanData = {
+            ...data,
+            rut_normalized: normalizeRut(data.rut_normalized)
+        };
+
         try {
             const url = initialData ? `/api/people/${initialData.id}` : '/api/people';
             const method = initialData ? 'PATCH' : 'POST';
@@ -51,7 +58,7 @@ export default function PersonForm({ onSuccess, initialData }: PersonFormProps) 
             const res = await fetch(url, {
                 method,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data),
+                body: JSON.stringify(cleanData),
             });
 
             if (!res.ok) {
