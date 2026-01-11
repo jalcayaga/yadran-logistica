@@ -28,7 +28,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <Link href="/admin/locations" className="font-medium hover:text-primary whitespace-nowrap">Ubicaciones</Link>
             <Link href="/admin/operators" className="font-medium hover:text-primary whitespace-nowrap">Operadores</Link>
             <Link href="/admin/vessels" className="font-medium hover:text-primary whitespace-nowrap">Naves</Link>
-            <Link href="/admin/routes" className="font-medium hover:text-primary whitespace-nowrap">Rutas</Link>
+            {/* <Link href="/admin/routes" className="font-medium hover:text-primary whitespace-nowrap">Rutas</Link> */}
             {role === ROLES.SYSADMIN && (
                 <Link href="/admin/users" className="font-medium hover:text-primary whitespace-nowrap text-purple-600">Usuarios</Link>
             )}

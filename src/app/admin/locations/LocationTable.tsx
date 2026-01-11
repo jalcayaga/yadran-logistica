@@ -118,7 +118,7 @@ export default function LocationTable() {
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                     <TabsList>
                         <TabsTrigger value="centers">Centros</TabsTrigger>
-                        <TabsTrigger value="ports">Puertos y Muelles</TabsTrigger>
+                        <TabsTrigger value="ports">Puertos</TabsTrigger>
                         <TabsTrigger value="all">Ver Todos</TabsTrigger>
                     </TabsList>
 
