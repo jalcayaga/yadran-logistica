@@ -144,6 +144,7 @@ export default function ItineraryForm({ onSuccess, initialData }: ItineraryFormP
             }
 
             // Success toast
+            console.log("✅ Itinerary saved successfully!");
             toast({
                 title: initialData?.id ? "Itinerario actualizado" : "Itinerario creado",
                 description: "Los cambios se guardaron correctamente.",
@@ -152,6 +153,7 @@ export default function ItineraryForm({ onSuccess, initialData }: ItineraryFormP
 
             onSuccess();
         } catch (err: any) {
+            console.error("❌ Error saving itinerary:", err.message);
             setGlobalError(err.message);
         } finally {
             setLoading(false);
@@ -160,7 +162,7 @@ export default function ItineraryForm({ onSuccess, initialData }: ItineraryFormP
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {globalError && <div className="p-4 bg-red-600 text-white rounded-md text-sm font-medium shadow-sm flex items-center gap-2">
+            {globalError && <div className="p-4 bg-red-500 dark:bg-red-600 text-white rounded-md text-sm font-medium shadow-sm flex items-center gap-2">
                 <span className="text-xl">⚠️</span>
                 {globalError}
             </div>}
