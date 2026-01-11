@@ -70,7 +70,11 @@ export default function PersonForm({ onSuccess, initialData }: PersonFormProps) 
             reset();
             onSuccess();
         } catch (err: any) {
-            setGlobalError(err.message);
+            if (err.message.includes('people_rut_normalized_key')) {
+                setGlobalError('Este RUT ya está registrado en el sistema.');
+            } else {
+                setGlobalError(err.message);
+            }
         } finally {
             setLoading(false);
         }
