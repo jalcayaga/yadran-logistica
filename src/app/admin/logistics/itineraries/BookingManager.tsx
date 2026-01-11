@@ -1,5 +1,3 @@
-'use client';
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,12 +9,25 @@ import {
 } from "@/components/ui/select"
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Plus, Trash2, AlertCircle, FileText, Pencil } from 'lucide-react';
+import { Plus, Trash2, AlertCircle, FileText, Pencil, Check, ChevronsUpDown } from 'lucide-react';
 import { Itinerary, Person } from '@/utils/zod_schemas';
 import { ManifestDocument } from '@/components/pdf/ManifestDocument';
 import { useToast } from "@/hooks/use-toast";
 import { formatDate } from "@/utils/formatters";
-
+import { cn } from "@/lib/utils";
+import {
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+} from "@/components/ui/command"
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover"
 
 
 interface BookingManagerProps {
@@ -46,6 +57,7 @@ export default function BookingManager({ itinerary }: BookingManagerProps) {
     const [selectedOrigin, setSelectedOrigin] = useState<string>('');
     const [selectedDestination, setSelectedDestination] = useState<string>('');
     const [editingBookingId, setEditingBookingId] = useState<string | null>(null);
+    const [openCombobox, setOpenCombobox] = useState(false);
 
     const sortedStops = itinerary.stops?.sort((a: any, b: any) => a.stop_order - b.stop_order) || [];
 
@@ -213,20 +225,51 @@ export default function BookingManager({ itinerary }: BookingManagerProps) {
                             </div>
                         )}
 
-                        <div className="space-y-2">
+                        <div className="space-y-2 flex flex-col">
                             <Label>Pasajero</Label>
-                            <Select value={selectedPassenger} onValueChange={setSelectedPassenger}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Seleccionar pasajero" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {people.map(p => (
-                                        <SelectItem key={p.id} value={p.id!}>
-                                            {p.first_name} {p.last_name} ({p.rut_display})
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <Popover open={openCombobox} onOpenChange={setOpenCombobox}>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        role="combobox"
+                                        aria-expanded={openCombobox}
+                                        className="w-full justify-between"
+                                    >
+                                        {selectedPassenger
+                                            ? people.find((p) => p.id === selectedPassenger)?.first_name + " " + people.find((p) => p.id === selectedPassenger)?.last_name
+                                            : "Seleccionar pasajero..."}
+                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-[400px] p-0">
+                                    <Command>
+                                        <CommandInput placeholder="Buscar por nombre o RUT..." />
+                                        <CommandList>
+                                            <CommandEmpty>No se encontró pasajero.</CommandEmpty>
+                                            <CommandGroup>
+                                                {people.map((p) => (
+                                                    <CommandItem
+                                                        key={p.id}
+                                                        value={p.first_name + " " + p.last_name + " " + p.rut_display}
+                                                        onSelect={() => {
+                                                            setSelectedPassenger(p.id!)
+                                                            setOpenCombobox(false)
+                                                        }}
+                                                    >
+                                                        <Check
+                                                            className={cn(
+                                                                "mr-2 h-4 w-4",
+                                                                selectedPassenger === p.id ? "opacity-100" : "opacity-0"
+                                                            )}
+                                                        />
+                                                        {p.first_name} {p.last_name} ({p.rut_display})
+                                                    </CommandItem>
+                                                ))}
+                                            </CommandGroup>
+                                        </CommandList>
+                                    </Command>
+                                </PopoverContent>
+                            </Popover>
                         </div>
 
                         <div className="space-y-2">
