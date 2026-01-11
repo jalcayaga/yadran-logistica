@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/table"
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input'; // Search input
-import { formatPhone } from '@/utils/formatters';
+import { formatPhone, formatRut, normalizeRut } from '@/utils/formatters';
 import { Plus, ArrowUpDown, Pencil, Trash2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -59,10 +59,13 @@ export default function PeopleTable() {
         // 1. Filter
         if (searchTerm) {
             const lowerTerm = searchTerm.toLowerCase();
+            const cleanTerm = normalizeRut(searchTerm).toLowerCase(); // Clean search term for RUT matching
+
             result = result.filter(p =>
                 p.first_name.toLowerCase().includes(lowerTerm) ||
                 p.last_name.toLowerCase().includes(lowerTerm) ||
                 p.rut_display.toLowerCase().includes(lowerTerm) ||
+                p.rut_normalized.toLowerCase().includes(cleanTerm) || // Check against normalized RUT
                 p.company.toLowerCase().includes(lowerTerm)
             );
         }
@@ -172,7 +175,7 @@ export default function PeopleTable() {
                                 <TableRow key={person.id}>
                                     <TableCell className="font-medium">{person.first_name}</TableCell>
                                     <TableCell className="font-medium">{person.last_name}</TableCell>
-                                    <TableCell>{person.rut_display}</TableCell>
+                                    <TableCell>{formatRut(person.rut_normalized)}</TableCell>
                                     <TableCell>{person.company}</TableCell>
                                     <TableCell>{person.job_title || '-'}</TableCell>
                                     <TableCell>{formatPhone(person.phone_e164)}</TableCell>
