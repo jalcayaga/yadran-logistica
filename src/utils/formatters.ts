@@ -85,12 +85,17 @@ export const formatCurrency = (amount: number) => {
 
 export const formatDate = (date: string | Date | null | undefined) => {
     if (!date) return '-';
-    // If string is YYYY-MM-DD, parse as local parts to avoid UTC shift
-    if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
-        const [y, m, d] = date.split('-').map(Number);
-        const localDate = new Date(y, m - 1, d); // Month is 0-indexed
+    // Robustly extract YYYY-MM-DD to avoid Timezone shifts on display
+    const dateStr = date instanceof Date ? date.toISOString() : String(date);
+    const match = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+
+    if (match) {
+        const [_, y, m, d] = match;
+        // Construct local date at 00:00:00 to ensure day stability
+        const localDate = new Date(Number(y), Number(m) - 1, Number(d));
         return format(localDate, "dd/MM/yyyy", { locale: es });
     }
+
     return format(new Date(date), "dd/MM/yyyy", { locale: es });
 };
 
