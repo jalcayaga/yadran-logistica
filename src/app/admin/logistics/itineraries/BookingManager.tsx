@@ -13,7 +13,7 @@ import { Plus, Trash2, AlertCircle, FileText, Pencil, Check, ChevronsUpDown, Upl
 import { Itinerary, Person } from '@/utils/zod_schemas';
 import { ManifestDocument } from '@/components/pdf/ManifestDocument';
 import { useToast } from "@/hooks/use-toast";
-import { formatDate } from "@/utils/formatters";
+import { formatDate, formatRut } from "@/utils/formatters";
 import { cn } from "@/lib/utils";
 import Papa from 'papaparse';
 import {
@@ -495,7 +495,7 @@ export default function BookingManager({ itinerary }: BookingManagerProps) {
                                                                 selectedPassenger === p.id ? "opacity-100" : "opacity-0"
                                                             )}
                                                         />
-                                                        {p.first_name} {p.last_name} ({p.rut_display})
+                                                        {p.first_name} {p.last_name} ({p.rut_display || formatRut(p.rut_normalized)})
                                                     </CommandItem>
                                                 ))}
                                             </CommandGroup>
