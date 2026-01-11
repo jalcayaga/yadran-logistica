@@ -91,42 +91,61 @@ export default function BookingManager({ itinerary }: BookingManagerProps) {
             skipEmptyLines: true,
             complete: (results) => {
                 const rows: BulkRow[] = [];
-                // Expected headers: RUT, ORIGEN, DESTINO  (Case insensitive ideally, but strict for now)
+                // Itinerary Start Location (Default Origin for all)
+                const defaultOrigin = sortedStops[0];
+
+                if (!defaultOrigin) {
+                    setBulkError('El itinerario no tiene paradas definidas. No se puede determinar el origen.');
+                    return;
+                }
 
                 results.data.forEach((row: any) => {
-                    const rut = row['RUT'] || row['rut'] || '';
-                    const originName = row['ORIGEN'] || row['origen'] || '';
-                    const destinationName = row['DESTINO'] || row['destino'] || '';
+                    // Mapeo flexible de columnas (Excel suele traer mayusculas/tildes)
+                    // Keys expected: RUT, CENTRO (o DESTINO)
+                    const rut = row['RUT'] || row['rut'] || row['Rut'] || '';
+                    const destRaw = row['CENTRO'] || row['centro'] || row['DESTINO'] || row['destino'] || row['Centro'] || '';
 
-                    if (!rut || !originName || !destinationName) return; // Skip invalid rows or add error
+                    if (!rut || !destRaw) return; // Skip empty rows
 
                     // 1. Find Person
                     const cleanRut = rut.replace(/\./g, '').replace(/-/g, '').toUpperCase();
                     const person = people.find(p => p.rut_normalized.replace(/\./g, '').replace(/-/g, '').toUpperCase().includes(cleanRut)); // Loose match logic
 
-                    // 2. Find Stops
-                    const originStop = sortedStops.find((s: any) => s.location.name.toLowerCase().trim() === originName.toLowerCase().trim());
-                    const destinationStop = sortedStops.find((s: any) => s.location.name.toLowerCase().trim() === destinationName.toLowerCase().trim());
+                    // 2. Find Destination Stop
+                    // Attempt to fuzzy match or exact match the location name
+                    const destinationStop = sortedStops.find((s: any) =>
+                        s.location.name.toLowerCase().trim() === destRaw.toLowerCase().trim() ||
+                        s.location.code.toLowerCase().trim() === destRaw.toLowerCase().trim()
+                    );
 
                     let isValid = true;
                     let errorMsg = '';
 
-                    if (!person) { isValid = false; errorMsg += 'Pasajero no encontrado. '; }
-                    if (!originStop) { isValid = false; errorMsg += 'Origen desconocido. '; }
-                    if (!destinationStop) { isValid = false; errorMsg += 'Destino desconocido. '; }
+                    if (!person) { isValid = false; errorMsg += 'Pasajero no existe en sistema. '; }
+                    if (!destinationStop) { isValid = false; errorMsg += `Centro '${destRaw}' no es parte de este viaje. `; }
+
+                    // Prevent circular route (Origin == Destination)
+                    if (destinationStop?.id === defaultOrigin.id) {
+                        isValid = false;
+                        errorMsg += 'El destino es igual al origen. ';
+                    }
 
                     rows.push({
                         rut,
                         personName: person ? `${person.first_name} ${person.last_name}` : undefined,
                         personId: person?.id,
-                        originName,
-                        originId: originStop?.id,
-                        destinationName,
+                        originName: defaultOrigin.location.name,
+                        originId: defaultOrigin.id,
+                        destinationName: destRaw,
                         destinationId: destinationStop?.id,
                         isValid,
                         error: errorMsg
                     });
                 });
+
+                if (rows.length === 0) {
+                    setBulkError('No se encontraron filas válidas. Verifique que las columnas sean "RUT" y "CENTRO".');
+                }
 
                 setParsedRows(rows);
             },
@@ -370,7 +389,7 @@ export default function BookingManager({ itinerary }: BookingManagerProps) {
                             <div className="flex flex-col items-center gap-2 py-4">
                                 <FileSpreadsheet className="w-8 h-8 text-muted-foreground" />
                                 <span className="text-sm font-medium">Arrastra un archivo CSV o haz clic para buscar</span>
-                                <span className="text-xs text-muted-foreground">Formato: RUT, Nombre (opc), Origen, Destino</span>
+                                <span className="text-xs text-muted-foreground">Formato: RUT, CENTRO (El nombre es opcional)</span>
                             </div>
                         </div>
 
