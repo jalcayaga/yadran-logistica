@@ -1,6 +1,7 @@
 import { createClient } from '@/utils/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { ItineraryStatusEnum } from '@/utils/zod_schemas';
+import { notifyItineraryChange } from '@/lib/notifications';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const supabase = await createClient();
@@ -96,6 +97,14 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         .single();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+
+    // 4. Notifications
+    // If status changed to suspended or cancelled, notify passengers
+    if (headerData.status && (headerData.status === 'suspended' || headerData.status === 'cancelled')) {
+        // Fire and forget (or await to be safe on Vercel)
+        await notifyItineraryChange(id, headerData.status);
+    }
+
     return NextResponse.json(data);
 }
 export async function DELETE(

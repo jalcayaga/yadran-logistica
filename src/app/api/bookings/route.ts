@@ -1,5 +1,6 @@
 import { createClient } from '@/utils/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { notifyBookingConfirmation } from '@/lib/notifications';
 
 export async function GET(request: NextRequest) {
     const supabase = await createClient();
@@ -88,6 +89,9 @@ export async function POST(request: NextRequest) {
     if (bookingError) {
         return NextResponse.json({ error: bookingError.message }, { status: 400 });
     }
+
+    // 4. Notifications (Fire and Forget)
+    await notifyBookingConfirmation(booking.id);
 
     return NextResponse.json({ success: true, booking });
 }
