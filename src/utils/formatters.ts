@@ -43,11 +43,11 @@ export function formatPhone(phone: string | null): string {
 
     // Format: 56 9 1234 5678 (Chile Mobile)
     if (clean.length === 11 && clean.startsWith('569')) {
-        return `+56 9 ${clean.slice(3, 7)} ${clean.slice(7)}`;
+        return `56 9 ${clean.slice(3, 7)} ${clean.slice(7)}`;
     }
 
-    // Return original with + if looks like a number
-    return `+${clean}`;
+    // Return original cleaned (no +)
+    return clean;
 }
 
 export function normalizePhone(phone: string): string | null {

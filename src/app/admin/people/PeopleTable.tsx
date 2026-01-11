@@ -175,14 +175,6 @@ export default function PeopleTable() {
                                     <TableCell>{person.rut_display}</TableCell>
                                     <TableCell>{person.company}</TableCell>
                                     <TableCell>{person.job_title || '-'}</TableCell>
-                                    import {formatRut, formatPhone} from '@/utils/formatters';
-
-                                    // ...
-
-                                    <TableCell className="font-medium">{person.last_name}</TableCell>
-                                    <TableCell>{person.rut_display}</TableCell>
-                                    <TableCell>{person.company}</TableCell>
-                                    <TableCell>{person.job_title || '-'}</TableCell>
                                     <TableCell>{formatPhone(person.phone_e164)}</TableCell>
                                     <TableCell>
                                         <div className="flex gap-1">
