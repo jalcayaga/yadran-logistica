@@ -156,8 +156,8 @@ export default function ItineraryForm({ onSuccess, initialData }: ItineraryFormP
                 {globalError}
             </div>}
 
-            {/* Header: Date, Time, Vessel */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-lg bg-gray-50/50">
+            {/* Header: Date, Time, Vessel, Status */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border rounded-lg bg-gray-50/50">
                 <div className="space-y-2">
                     <Label htmlFor="date">Fecha de Zarpe</Label>
                     <Input type="date" {...register('date')} />
@@ -170,7 +170,7 @@ export default function ItineraryForm({ onSuccess, initialData }: ItineraryFormP
                 </div>
                 <div className="space-y-2">
                     <Label>Nave Asignada</Label>
-                    <Select onValueChange={(val) => setValue('vessel_id', val)} defaultValue={selectedVessel}>
+                    <Select onValueChange={(val) => setValue('vessel_id', val)} defaultValue={watch('vessel_id')}>
                         <SelectTrigger>
                             <SelectValue placeholder="Seleccionar nave" />
                         </SelectTrigger>
@@ -181,6 +181,22 @@ export default function ItineraryForm({ onSuccess, initialData }: ItineraryFormP
                         </SelectContent>
                     </Select>
                     {errors.vessel_id && <p className="text-red-500 text-xs">{errors.vessel_id.message}</p>}
+                </div>
+                <div className="space-y-2">
+                    <Label>Estado</Label>
+                    <Select onValueChange={(val: any) => setValue('status', val)} defaultValue={watch('status')}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Estado actual" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="scheduled">Programado</SelectItem>
+                            <SelectItem value="in_progress">En Curso</SelectItem>
+                            <SelectItem value="completed">Finalizado</SelectItem>
+                            <SelectItem value="suspended" className="text-orange-600 font-medium">Suspendido</SelectItem>
+                            <SelectItem value="cancelled" className="text-red-600 font-medium">Cancelado</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    {errors.status && <p className="text-red-500 text-xs">{errors.status.message}</p>}
                 </div>
             </div>
 
