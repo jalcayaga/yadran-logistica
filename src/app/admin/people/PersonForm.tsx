@@ -8,6 +8,7 @@ import { normalizeRut, normalizePhone, formatRut } from '@/utils/formatters';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useState, useEffect } from 'react';
+import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
 
 // Use z.input to handle fields with defaults (like active) correctly
@@ -21,6 +22,7 @@ interface PersonFormProps {
 export default function PersonForm({ onSuccess, initialData }: PersonFormProps) {
     const [loading, setLoading] = useState(false);
     const [globalError, setGlobalError] = useState('');
+    const { toast } = useToast();
 
     const {
         register,
@@ -75,6 +77,12 @@ export default function PersonForm({ onSuccess, initialData }: PersonFormProps) 
                 const body = await res.json();
                 throw new Error(body.error || 'Error al guardar');
             }
+
+            toast({
+                title: initialData ? "Pasajero actualizado" : "Pasajero creado",
+                description: "Los cambios se guardaron correctamente.",
+                className: "bg-green-500 text-white border-green-600"
+            });
 
             reset();
             onSuccess();

@@ -13,6 +13,7 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { useEffect, useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
 
 // We need types for the dropdowns
@@ -30,6 +31,7 @@ interface RouteFormProps {
 export default function RouteForm({ onSuccess, initialData }: RouteFormProps) {
     const [loading, setLoading] = useState(false);
     const [globalError, setGlobalError] = useState('');
+    const { toast } = useToast();
 
     // Catalogs State
     const [locations, setLocations] = useState<LocationOption[]>([]);
@@ -98,6 +100,12 @@ export default function RouteForm({ onSuccess, initialData }: RouteFormProps) {
                 const body = await res.json();
                 throw new Error(body.error || 'Error al guardar');
             }
+
+            toast({
+                title: initialData ? "Ruta actualizada" : "Ruta creada",
+                description: "Los cambios se guardaron correctamente.",
+                className: "bg-green-500 text-white border-green-600"
+            });
 
             reset();
             onSuccess();

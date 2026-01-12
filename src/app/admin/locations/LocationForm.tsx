@@ -15,6 +15,7 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
 
 type LocationFormData = z.input<typeof locationSchema>;
@@ -27,6 +28,7 @@ interface LocationFormProps {
 export default function LocationForm({ onSuccess, initialData }: LocationFormProps) {
     const [loading, setLoading] = useState(false);
     const [globalError, setGlobalError] = useState('');
+    const { toast } = useToast();
 
     const {
         register,
@@ -65,6 +67,12 @@ export default function LocationForm({ onSuccess, initialData }: LocationFormPro
                 const body = await res.json();
                 throw new Error(body.error || 'Error al guardar');
             }
+
+            toast({
+                title: initialData ? "Ubicación actualizada" : "Ubicación creada",
+                description: "Los cambios se guardaron correctamente.",
+                className: "bg-green-500 text-white border-green-600"
+            });
 
             reset();
             onSuccess();

@@ -14,6 +14,7 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
 
 type OperatorFormData = z.input<typeof operatorSchema>;
@@ -26,6 +27,7 @@ interface OperatorFormProps {
 export default function OperatorForm({ onSuccess, initialData }: OperatorFormProps) {
     const [loading, setLoading] = useState(false);
     const [globalError, setGlobalError] = useState('');
+    const { toast } = useToast();
 
     const {
         register,
@@ -63,6 +65,12 @@ export default function OperatorForm({ onSuccess, initialData }: OperatorFormPro
                 const body = await res.json();
                 throw new Error(body.error || 'Error al guardar');
             }
+
+            toast({
+                title: initialData ? "Operador actualizado" : "Operador creado",
+                description: "Los cambios se guardaron correctamente.",
+                className: "bg-green-500 text-white border-green-600"
+            });
 
             reset();
             onSuccess();
