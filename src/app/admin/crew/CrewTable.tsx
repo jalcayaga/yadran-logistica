@@ -16,7 +16,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, UserPlus, Check, ChevronsUpDown } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { cn } from "@/lib/utils";
 import { Label } from '@/components/ui/label';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod'; // Standard resolver, assuming it's available or we use manual validation
@@ -34,6 +37,7 @@ export default function CrewTable() {
     const [people, setPeople] = useState<Person[]>([]);
     const [loading, setLoading] = useState(true);
     const [isOpen, setIsOpen] = useState(false);
+    const [isPromoteOpen, setIsPromoteOpen] = useState(false);
     const [editingPerson, setEditingPerson] = useState<Person | null>(null);
 
     const fetchData = async () => {
@@ -94,8 +98,13 @@ export default function CrewTable() {
                 : await supabase.from('people').insert(rawData);
 
             setSubmitting(false);
+            setSubmitting(false);
             if (error) {
-                alert('Error: ' + error.message);
+                if (error.message.includes('people_rut_normalized_key')) {
+                    alert('Este RUT ya está registrado en el sistema. Es posible que la persona ya exista como Pasajero.\n\nPor favor, búsquelo en la lista de gestor de itinerarios o contacte a soporte.');
+                } else {
+                    alert('Error: ' + error.message);
+                }
             } else {
                 onSuccess();
             }
@@ -155,9 +164,128 @@ export default function CrewTable() {
         );
     };
 
+    const PromotePassengerForm = ({ onSuccess }: { onSuccess: () => void }) => {
+        const [openCombobox, setOpenCombobox] = useState(false);
+        const [selectedPersonId, setSelectedPersonId] = useState<string>('');
+        const [nonCrewPeople, setNonCrewPeople] = useState<Person[]>([]);
+        const [loadingSearch, setLoadingSearch] = useState(false);
+        const [promoting, setPromoting] = useState(false);
+
+        useEffect(() => {
+            const fetchNonCrew = async () => {
+                setLoadingSearch(true);
+                const { data } = await supabase
+                    .from('people')
+                    .select('*')
+                    .neq('is_crew', true)
+                    .eq('active', true)
+                    .order('first_name')
+                    .limit(50);
+
+                if (data) setNonCrewPeople(data);
+                setLoadingSearch(false);
+            };
+            fetchNonCrew();
+        }, []);
+
+        const handlePromote = async () => {
+            if (!selectedPersonId) return;
+            setPromoting(true);
+
+            const { error } = await supabase
+                .from('people')
+                .update({ is_crew: true })
+                .eq('id', selectedPersonId);
+
+            setPromoting(false);
+
+            if (error) {
+                alert('Error al promover: ' + error.message);
+            } else {
+                alert('Persona agregada a la tripulación exitosamente.');
+                onSuccess();
+            }
+        };
+
+        return (
+            <div className="space-y-4 py-4">
+                <div className="space-y-2 flex flex-col">
+                    <Label>Buscar Pasajero</Label>
+                    <Popover open={openCombobox} onOpenChange={setOpenCombobox}>
+                        <PopoverTrigger asChild>
+                            <Button
+                                variant="outline"
+                                role="combobox"
+                                aria-expanded={openCombobox}
+                                className="justify-between w-full"
+                            >
+                                {selectedPersonId
+                                    ? nonCrewPeople.find((p) => p.id === selectedPersonId)
+                                        ? `${nonCrewPeople.find((p) => p.id === selectedPersonId)?.first_name} ${nonCrewPeople.find((p) => p.id === selectedPersonId)?.last_name}`
+                                        : "Seleccionar persona..."
+                                    : "Seleccionar persona..."}
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="p-0 w-full" align="start">
+                            <Command>
+                                <CommandInput placeholder="Buscar por nombre o RUT..." />
+                                <CommandList>
+                                    <CommandEmpty>No se encontraron resultados.</CommandEmpty>
+                                    <CommandGroup>
+                                        {nonCrewPeople.map((p) => (
+                                            <CommandItem
+                                                key={p.id}
+                                                value={`${p.first_name} ${p.last_name} ${p.rut_display}`}
+                                                onSelect={() => {
+                                                    setSelectedPersonId(p.id === selectedPersonId ? "" : p.id || "")
+                                                    setOpenCombobox(false)
+                                                }}
+                                            >
+                                                <Check
+                                                    className={cn(
+                                                        "mr-2 h-4 w-4",
+                                                        selectedPersonId === p.id ? "opacity-100" : "opacity-0"
+                                                    )}
+                                                />
+                                                {p.first_name} {p.last_name} ({p.rut_display})
+                                            </CommandItem>
+                                        ))}
+                                    </CommandGroup>
+                                </CommandList>
+                            </Command>
+                        </PopoverContent>
+                    </Popover>
+                    <p className="text-xs text-muted-foreground">
+                        Busca personas que ya están registradas como pasajeros pero NO son tripulación.
+                    </p>
+                </div>
+
+                <div className="flex justify-end gap-2 pt-2">
+                    <Button onClick={handlePromote} disabled={!selectedPersonId || promoting}>
+                        {promoting ? 'Agregando...' : 'Agregar a Tripulación'}
+                    </Button>
+                </div>
+            </div>
+        );
+    };
+
     return (
         <div>
-            <div className="flex justify-end mb-4">
+            {/* Promote Dialog */}
+            <Dialog open={isPromoteOpen} onOpenChange={setIsPromoteOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Buscar Persona Existente</DialogTitle>
+                    </DialogHeader>
+                    <PromotePassengerForm onSuccess={() => { setIsPromoteOpen(false); fetchData(); }} />
+                </DialogContent>
+            </Dialog>
+
+            <div className="flex justify-end mb-4 gap-2">
+                <Button variant="outline" onClick={() => setIsPromoteOpen(true)}>
+                    <UserPlus className="w-4 h-4 mr-2" /> Buscar Existente
+                </Button>
                 <Dialog open={isOpen} onOpenChange={setIsOpen}>
                     <DialogTrigger asChild>
                         <Button onClick={() => setEditingPerson(null)}>
@@ -215,6 +343,6 @@ export default function CrewTable() {
                     </TableBody>
                 </Table>
             </div>
-        </div>
+        </div >
     );
 }

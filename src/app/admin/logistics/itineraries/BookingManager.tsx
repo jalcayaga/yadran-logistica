@@ -524,6 +524,7 @@ export default function BookingManager({ itinerary }: BookingManagerProps) {
                                                             )}
                                                         />
                                                         {p.first_name} {p.last_name} ({p.rut_display || formatRut(p.rut_normalized)})
+                                                        {p.is_crew && <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-1 rounded">Tripulación</span>}
                                                     </CommandItem>
                                                 ))}
                                             </CommandGroup>
