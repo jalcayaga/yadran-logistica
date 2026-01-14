@@ -57,6 +57,8 @@ export default function PeopleTable() {
         let result = [...people];
 
         // 1. Filter
+        result = result.filter(p => !p.is_crew);
+
         if (searchTerm) {
             const lowerTerm = searchTerm.toLowerCase();
             const cleanSearchTerm = searchTerm.replace(/[^0-9kK]/g, '').toLowerCase();

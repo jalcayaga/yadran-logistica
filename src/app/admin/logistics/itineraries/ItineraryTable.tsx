@@ -11,7 +11,9 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { Button } from '@/components/ui/button';
-import { Plus, Calendar, Clock, Ship, Trash2, Pencil } from 'lucide-react';
+import { Plus, Calendar, Clock, Ship, Trash2, Pencil, Users, FileText } from 'lucide-react';
+import CrewManager from './CrewManager';
+import ManifestPreview from './ManifestPreview';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import ItineraryForm from './ItineraryForm';
@@ -40,6 +42,8 @@ export default function ItineraryTable() {
     const [managingItinerary, setManagingItinerary] = useState<ItineraryWithRelations | null>(null);
     const [editingItinerary, setEditingItinerary] = useState<ItineraryWithRelations | null>(null);
     const [deletingItinerary, setDeletingItinerary] = useState<ItineraryWithRelations | null>(null);
+    const [managingCrew, setManagingCrew] = useState<ItineraryWithRelations | null>(null);
+    const [viewingManifest, setViewingManifest] = useState<ItineraryWithRelations | null>(null);
 
     const fetchItineraries = async () => {
         setLoading(true);
@@ -177,6 +181,12 @@ export default function ItineraryTable() {
                                             <Button variant="ghost" size="sm" onClick={() => setEditingItinerary(itin)} title="Editar">
                                                 <Pencil className="w-4 h-4 text-blue-500" />
                                             </Button>
+                                            <Button variant="ghost" size="sm" onClick={() => setManagingCrew(itin)} title="Tripulación">
+                                                <Users className="w-4 h-4 text-orange-500" />
+                                            </Button>
+                                            <Button variant="ghost" size="sm" onClick={() => setViewingManifest(itin)} title="Manifiesto">
+                                                <FileText className="w-4 h-4 text-green-600" />
+                                            </Button>
                                             <Button variant="outline" size="sm" onClick={() => setManagingItinerary(itin)}>
                                                 Gestionar
                                             </Button>
@@ -216,6 +226,18 @@ export default function ItineraryTable() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            <Dialog open={!!managingCrew} onOpenChange={(open) => !open && setManagingCrew(null)}>
+                <DialogContent className="max-w-2xl">
+                    {managingCrew && <CrewManager itinerary={managingCrew} onClose={() => setManagingCrew(null)} />}
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={!!viewingManifest} onOpenChange={(open) => !open && setViewingManifest(null)}>
+                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                    {viewingManifest && viewingManifest.id && <ManifestPreview itineraryId={viewingManifest.id} />}
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

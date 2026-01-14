@@ -26,6 +26,7 @@ export const personSchema = z.object({
     job_title: z.string().nullable().optional(),
     phone_e164: phoneE164Schema,
     active: z.boolean().default(true),
+    is_crew: z.boolean().default(false),
 });
 
 export const locationSchema = z.object({
@@ -50,6 +51,15 @@ export const vesselSchema = z.object({
     capacity: z.coerce.number().int().nonnegative().default(0),
     active: z.boolean().default(true),
 });
+
+export const itineraryCrewSchema = z.object({
+    id: uuidSchema.optional(),
+    itinerary_id: uuidSchema,
+    person_id: uuidSchema,
+    role: z.enum(['captain', 'substitute', 'crew_member']),
+});
+
+export type ItineraryCrew = z.infer<typeof itineraryCrewSchema>;
 
 export const routeSchema = z.object({
     id: uuidSchema.optional(),
