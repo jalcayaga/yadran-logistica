@@ -180,7 +180,8 @@ export default function CrewTable() {
                     .neq('is_crew', true)
                     .eq('active', true)
                     .order('first_name')
-                    .limit(50);
+                    .order('first_name')
+                    .limit(1000);
 
                 if (data) setNonCrewPeople(data);
                 setLoadingSearch(false);
@@ -236,7 +237,7 @@ export default function CrewTable() {
                                         {nonCrewPeople.map((p) => (
                                             <CommandItem
                                                 key={p.id}
-                                                value={`${p.first_name} ${p.last_name} ${p.rut_display}`}
+                                                value={`${p.first_name} ${p.last_name} ${p.rut_display} ${p.rut_normalized}`}
                                                 onSelect={() => {
                                                     setSelectedPersonId(p.id === selectedPersonId ? "" : p.id || "")
                                                     setOpenCombobox(false)

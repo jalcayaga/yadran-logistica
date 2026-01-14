@@ -95,8 +95,7 @@ export default function ItineraryTable() {
         <div>
             <div className="flex justify-between items-center mb-6 gap-4">
                 <div>
-                    <h2 className="text-xl font-semibold">Itinerarios Programados</h2>
-                    <p className="text-sm text-muted-foreground">Gestiona las salidas de naves y sus paradas.</p>
+                    {/* Header removed to reduce redundancy */}
                 </div>
                 <Dialog open={isOpen || !!editingItinerary} onOpenChange={(open) => {
                     if (!open) {
@@ -188,7 +187,7 @@ export default function ItineraryTable() {
                                                 <FileText className="w-4 h-4 text-green-600" />
                                             </Button>
                                             <Button variant="outline" size="sm" onClick={() => setManagingItinerary(itin)}>
-                                                Gestionar
+                                                Reservas
                                             </Button>
                                             <Button variant="ghost" size="sm" onClick={() => setDeletingItinerary(itin)}>
                                                 <Trash2 className="w-4 h-4 text-red-500" />
