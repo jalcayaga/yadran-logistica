@@ -150,10 +150,10 @@ export default function CrewManager({ itinerary, onClose }: CrewManagerProps) {
 
             {/* Warning for missing roles */}
             {missing.length > 0 && (
-                <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+                <div className="bg-amber-500/10 border-l-4 border-amber-500 p-4 rounded-r-md">
                     <div className="flex">
                         <div className="ml-3">
-                            <p className="text-sm text-yellow-700">
+                            <p className="text-sm text-amber-600 dark:text-amber-500">
                                 <span className="font-bold">Sugerencia:</span> Podrían faltar roles recomendados: {missing.map(getRoleLabel).join(', ')}.
                             </p>
                         </div>
@@ -200,7 +200,7 @@ export default function CrewManager({ itinerary, onClose }: CrewManagerProps) {
             </div>
 
             {/* Assignment Form */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end bg-slate-50 p-4 rounded-md">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end bg-muted/30 p-4 rounded-md border">
                 <div className="space-y-2">
                     <Label>Rol</Label>
                     <Select value={selectedRole} onValueChange={(val: any) => setSelectedRole(val)}>
