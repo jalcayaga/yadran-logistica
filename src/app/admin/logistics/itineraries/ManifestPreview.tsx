@@ -135,7 +135,7 @@ export default function ManifestPreview({ itineraryId }: ManifestPreviewProps) {
             {/* Passengers Table */}
             <div>
                 <div className="flex justify-between items-center mb-4">
-                    <h3 className="font-bold text-lg">Pasajeros ({passengers.length})</h3>
+                    <h3 className="font-bold text-lg">Pasajeros</h3>
                 </div>
                 <Table className="border collapse w-full">
                     <TableHeader>
@@ -143,10 +143,6 @@ export default function ManifestPreview({ itineraryId }: ManifestPreviewProps) {
                             <TableHead className="w-12 text-center border">#</TableHead>
                             <TableHead className="border">Nombre Completo</TableHead>
                             <TableHead className="border">RUT</TableHead>
-                            <TableHead className="border">Empresa</TableHead>
-                            <TableHead className="border">Origen</TableHead>
-                            <TableHead className="border">Destino</TableHead>
-                            <TableHead className="border text-center print:hidden">Avísar</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -160,24 +156,6 @@ export default function ManifestPreview({ itineraryId }: ManifestPreviewProps) {
                                     <TableCell className="text-center font-medium border text-gray-500">{idx + 1}</TableCell>
                                     <TableCell className="font-semibold border">{p.person ? `${p.person.first_name} ${p.person.last_name}` : ''}</TableCell>
                                     <TableCell className="border">{p.person?.rut_display}</TableCell>
-                                    <TableCell className="border">{p.person?.company}</TableCell>
-                                    <TableCell className="border">{p.origin?.location?.name}</TableCell>
-                                    <TableCell className="border">{p.destination?.location?.name}</TableCell>
-                                    <TableCell className="border text-center print:hidden">
-                                        {p.person?.phone_e164 ? (
-                                            <a
-                                                href={getPassengerNotificationLink(p.person.phone_e164, p.person.first_name, data, p)}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                            >
-                                                <Button size="sm" variant="ghost" className="text-green-600 hover:text-green-700 hover:bg-green-50 h-8 w-8 p-0">
-                                                    <MessageSquare className="w-4 h-4" />
-                                                </Button>
-                                            </a>
-                                        ) : (
-                                            <span className="text-xs text-gray-400">Sin fono</span>
-                                        )}
-                                    </TableCell>
                                 </TableRow>
                             ))
                         )}

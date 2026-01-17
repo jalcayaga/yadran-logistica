@@ -31,11 +31,10 @@ export function getCaptainManifestLink(
         message += `- ${role}: ${name}\n`;
     });
 
-    message += `\n*Pasajeros (${passengers.length}):*\n`;
+    message += `\n*Pasajeros:*\n`;
     passengers.forEach((p, idx) => {
         const name = p.person ? `${p.person.first_name} ${p.person.last_name}` : 'Pasajero';
-        const dest = p.destination?.location?.name || 'Destino';
-        message += `${idx + 1}. ${name} -> ${dest}\n`;
+        message += `${idx + 1}. ${name}\n`;
     });
 
     return getWhatsAppLink(captainPhone, message);

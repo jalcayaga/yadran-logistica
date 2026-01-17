@@ -67,11 +67,9 @@ const styles = StyleSheet.create({
         borderColor: '#000',
         padding: 5,
     },
-    colNum: { width: '5%' },
-    colName: { width: '35%' },
-    colRut: { width: '15%' },
-    colOrg: { width: '20%' },
-    colDst: { width: '20%' },
+    colNum: { width: '10%' },
+    colName: { width: '60%' },
+    colRut: { width: '30%' },
     colNat: { width: '5%' }, // Nacionalidad
 
     footer: {
@@ -147,8 +145,6 @@ export const ManifestDocument = ({ vesselName, itineraryDate, startTime, passeng
                         <View style={[styles.tableCol, styles.colNum]}><Text>N°</Text></View>
                         <View style={[styles.tableCol, styles.colName]}><Text>Nombre Completo</Text></View>
                         <View style={[styles.tableCol, styles.colRut]}><Text>RUT / ID</Text></View>
-                        <View style={[styles.tableCol, styles.colOrg]}><Text>Origen</Text></View>
-                        <View style={[styles.tableCol, styles.colDst]}><Text>Destino</Text></View>
                     </View>
 
                     {/* Rows */}
@@ -162,14 +158,11 @@ export const ManifestDocument = ({ vesselName, itineraryDate, startTime, passeng
                                 <View style={[styles.tableCol, styles.colNum]}><Text>{index + 1}</Text></View>
                                 <View style={[styles.tableCol, styles.colName]}><Text>{p.passenger?.first_name} {p.passenger?.last_name}</Text></View>
                                 <View style={[styles.tableCol, styles.colRut]}><Text>{p.passenger?.rut_display || 'S/I'}</Text></View>
-                                <View style={[styles.tableCol, styles.colOrg]}><Text>{p.origin_stop?.location?.name || p.origin?.location?.name}</Text></View>
-                                <View style={[styles.tableCol, styles.colDst]}><Text>{p.destination_stop?.location?.name || p.destination?.location?.name}</Text></View>
                             </View>
                         ))
                     )}
                 </View>
 
-                <Text style={{ marginTop: 20, fontSize: 10 }}>Total Pasajeros: {passengers.length}</Text>
 
                 <View style={styles.footer}>
                     <Text>Generado automáticamente por Sistema Logístico Yadran - {new Date().toLocaleString("es-CL")}</Text>
