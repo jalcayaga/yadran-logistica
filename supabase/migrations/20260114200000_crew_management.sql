@@ -7,7 +7,8 @@ BEGIN
 END $$;
 
 -- Create Itinerary Crew Table
-CREATE TABLE IF NOT EXISTS itinerary_crew (
+-- Create Crew Assignments Table
+CREATE TABLE IF NOT EXISTS crew_assignments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     itinerary_id UUID NOT NULL REFERENCES itineraries(id) ON DELETE CASCADE,
     person_id UUID NOT NULL REFERENCES people(id) ON DELETE CASCADE,
@@ -16,23 +17,19 @@ CREATE TABLE IF NOT EXISTS itinerary_crew (
     UNIQUE(itinerary_id, person_id)
 );
 
--- RLS Policies for itinerary_crew
-ALTER TABLE itinerary_crew ENABLE ROW LEVEL SECURITY;
+-- RLS Policies for crew_assignments
+ALTER TABLE crew_assignments ENABLE ROW LEVEL SECURITY;
 
 -- Allow authenticated users (staff) to manage crew
--- Using the same logic as other tables, relying on the 'is_admin_or_logistica' function if available, 
--- or generic authenticated access if strictly controlled via app logic. 
--- Based on existing schema, we have 'is_admin_or_logistica'.
-
 DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'is_admin_or_logistica') THEN
-        CREATE POLICY "Staff full access itinerary_crew" ON itinerary_crew
+        CREATE POLICY "Staff full access crew_assignments" ON crew_assignments
             FOR ALL TO authenticated
             USING (is_admin_or_logistica());
     ELSE
         -- Fallback if function not found (safety net)
-        CREATE POLICY "Authenticated full access itinerary_crew" ON itinerary_crew
+        CREATE POLICY "Authenticated full access crew_assignments" ON crew_assignments
             FOR ALL TO authenticated
             USING (true);
     END IF;

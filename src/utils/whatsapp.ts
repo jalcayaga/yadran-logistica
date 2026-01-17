@@ -59,7 +59,62 @@ export function getPassengerNotificationLink(
         `📅 Fecha: ${date} a las ${time}\n` +
         `🚢 Nave: ${vesselName}\n` +
         `📍 Ruta: ${origin} -> ${dest}\n\n` +
-        `Por favor estar 15 minutos antes. ¡Buen viaje!`;
+        `Por favor llegar o estar listo 15 min antes. ¡Buen viaje!`;
 
     return getWhatsAppLink(passengerPhone, message);
 }
+
+export const sendItineraryToWebhook = async (itinerary: any, crew: any[], manifestUrl?: string, passengers: any[] = []) => {
+    // We send to our own internal API route to avoid CORS issues with n8n
+    // The API route will read the env var and forward the request server-side.
+    const apiUrl = '/api/trigger-n8n';
+
+    try {
+        // Calculate Route string (Origin -> Destination)
+        // Assuming stops are ordered.
+        const stops = itinerary.stops || [];
+        const sortedStops = [...stops].sort((a: any, b: any) => a.stop_order - b.stop_order);
+        const origin = sortedStops.length > 0 ? sortedStops[0].location?.name : 'Origen';
+        const dest = sortedStops.length > 1 ? sortedStops[sortedStops.length - 1].location?.name : 'Destino';
+        const route = `${origin} -> ${dest}`;
+
+        const payload = {
+            event: 'manual_send',
+            target: itinerary.target || 'all', // new field
+            itinerary: {
+                ...itinerary,
+                date_formatted: new Date(itinerary.date).toLocaleDateString('es-CL'),
+                vessel_name: itinerary.vessel?.name || 'Nave por asignar',
+                route: route
+            },
+            crew: crew.map(c => ({
+                name: `${c.person.first_name} ${c.person.last_name}`,
+                role: c.role,
+                phone: c.person.phone_e164
+            })),
+            passengers: passengers.map(p => ({
+                name: p.passenger?.first_name ? `${p.passenger.first_name} ${p.passenger.last_name}` : 'Pasajero',
+                phone: p.passenger?.phone_e164 || '',
+                role: 'passenger'
+            })),
+            manifest_pdf: manifestUrl, // Pass the PDF link
+            timestamp: new Date().toISOString()
+        };
+
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || `Error HTTP: ${response.status}`);
+        }
+
+        return { success: true };
+    } catch (error: any) {
+        console.error("Error sending to webhook:", error);
+        return { success: false, error: error.message };
+    }
+};

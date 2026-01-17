@@ -1,5 +1,6 @@
 
 import { createClient } from '@/utils/supabase/server';
+import { getOrCreateItineraryToken } from '@/utils/itinerary-token';
 
 const WEBHOOK_URL = process.env.N8N_WEBHOOK_URL;
 
@@ -110,8 +111,16 @@ export async function notifyItineraryChange(itineraryId: string, newStatus: stri
     const destName = sortedStops[sortedStops.length - 1]?.location?.name || 'Destino Desconocido';
     const routeName = `${originName} -> ${destName}`;
 
-    // 3. Construct Payload
-    const payload: ItineraryChangePayload = {
+    // 3. Obtain Token & Construct Payload
+    const token = await getOrCreateItineraryToken(
+        itinerary.id,
+        itinerary.date,
+        itinerary.start_time
+    );
+
+    const trackingLink = token ? `https://yadran-logistica.artifact.cl/i/${token}` : '';
+
+    const payload: ItineraryChangePayload & { tracking_link?: string } = {
         event: 'itinerary_status_change',
         itinerary: {
             id: itinerary.id,
@@ -128,6 +137,7 @@ export async function notifyItineraryChange(itineraryId: string, newStatus: stri
                 phone: b.passenger.phone_e164,
                 booking_id: b.id,
             })),
+        tracking_link: trackingLink
     };
 
     if (payload.passengers.length === 0) {

@@ -22,8 +22,10 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { cn } from "@/lib/utils";
 import { Label } from '@/components/ui/label';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod'; // Standard resolver, assuming it's available or we use manual validation
+import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { useToast } from "@/hooks/use-toast";
 
 // We reuse personSchema but we'll force is_crew to true
 const crewFormSchema = personSchema.extend({
@@ -39,6 +41,8 @@ export default function CrewTable() {
     const [isOpen, setIsOpen] = useState(false);
     const [isPromoteOpen, setIsPromoteOpen] = useState(false);
     const [editingPerson, setEditingPerson] = useState<Person | null>(null);
+    const [deletingId, setDeletingId] = useState<string | null>(null);
+    const { toast } = useToast();
 
     const fetchData = async () => {
         setLoading(true);
@@ -57,11 +61,25 @@ export default function CrewTable() {
         fetchData();
     }, []);
 
-    const handleDelete = async (id: string) => {
-        if (!confirm('¿Eliminar a este tripulante?')) return;
-        const { error } = await supabase.from('people').delete().eq('id', id);
-        if (error) alert('Error al eliminar');
-        else fetchData();
+    const confirmRemoveCrew = async () => {
+        if (!deletingId) return;
+        const { error } = await supabase.from('people').update({ is_crew: false }).eq('id', deletingId);
+
+        if (error) {
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: 'Error al actualizar: ' + error.message,
+            });
+        } else {
+            toast({
+                title: "Tripulante eliminado",
+                description: "La persona ahora es solo pasajero.",
+                className: "bg-green-500 text-white"
+            });
+            fetchData();
+        }
+        setDeletingId(null);
     };
 
     const CrewForm = ({ initialData, onSuccess }: { initialData?: Person, onSuccess: () => void }) => {
@@ -333,7 +351,7 @@ export default function CrewTable() {
                                             <Button variant="ghost" size="sm" onClick={() => { setEditingPerson(p); setIsOpen(true); }}>
                                                 <Pencil className="w-4 h-4" />
                                             </Button>
-                                            <Button variant="ghost" size="sm" onClick={() => p.id && handleDelete(p.id)}>
+                                            <Button variant="ghost" size="sm" onClick={() => p.id && setDeletingId(p.id)} title="Quitar de tripulación">
                                                 <Trash2 className="w-4 h-4 text-red-500" />
                                             </Button>
                                         </div>
@@ -344,6 +362,20 @@ export default function CrewTable() {
                     </TableBody>
                 </Table>
             </div>
+            <AlertDialog open={!!deletingId} onOpenChange={(open) => !open && setDeletingId(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>¿Quitar de la tripulación?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Esta persona dejará de ser tripulante pero permanecerá en el sistema como pasajero.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={confirmRemoveCrew} className="bg-red-600 hover:bg-red-700">Confirmar</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div >
     );
 }

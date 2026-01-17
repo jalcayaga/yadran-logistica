@@ -13,6 +13,17 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface CrewManagerProps {
     itinerary: any; // Using any for now to avoid strict typing issues with extended itinerary
@@ -20,7 +31,7 @@ interface CrewManagerProps {
 }
 
 interface CrewAssignment {
-    id: string; // itinerary_crew id
+    id: string; // crew_assignments id
     person_id: string;
     role: 'captain' | 'substitute' | 'crew_member';
     person?: Person;
@@ -28,6 +39,7 @@ interface CrewAssignment {
 
 export default function CrewManager({ itinerary, onClose }: CrewManagerProps) {
     const supabase = createClient();
+    const { toast } = useToast();
     const [crew, setCrew] = useState<CrewAssignment[]>([]);
     const [people, setPeople] = useState<Person[]>([]);
     const [loading, setLoading] = useState(true);
@@ -44,6 +56,14 @@ export default function CrewManager({ itinerary, onClose }: CrewManagerProps) {
         ? ['captain', 'substitute']
         : ['captain', 'crew_member'];
 
+    const [confirmDialog, setConfirmDialog] = useState<{
+        open: boolean;
+        title: string;
+        description: string;
+        label: string;
+        action: () => void;
+    }>({ open: false, title: '', description: '', label: 'Confirmar', action: () => { } });
+
     useEffect(() => {
         fetchData();
     }, [itinerary.id]);
@@ -52,7 +72,7 @@ export default function CrewManager({ itinerary, onClose }: CrewManagerProps) {
         setLoading(true);
         // Fetch Crew
         const { data: crewData, error: crewError } = await supabase
-            .from('itinerary_crew')
+            .from('crew_assignments')
             .select('*, person:people(*)')
             .eq('itinerary_id', itinerary.id);
 
@@ -73,21 +93,10 @@ export default function CrewManager({ itinerary, onClose }: CrewManagerProps) {
         setLoading(false);
     };
 
-    const handleAddCrew = async () => {
-        if (!selectedPerson) return;
-        if (crew.find(c => c.person_id === selectedPerson)) {
-            alert('Esta persona ya está asignada.');
-            return;
-        }
-
-        // Rule Validation (Optional but helpful)
-        if (selectedRole === 'captain' && crew.some(c => c.role === 'captain')) {
-            if (!confirm('Ya hay un capitán asignado. ¿Deseas agregar otro?')) return;
-        }
-
+    const executeAddCrew = async () => {
         setSaving(true);
         const { data, error } = await supabase
-            .from('itinerary_crew')
+            .from('crew_assignments')
             .insert({
                 itinerary_id: itinerary.id,
                 person_id: selectedPerson,
@@ -97,28 +106,61 @@ export default function CrewManager({ itinerary, onClose }: CrewManagerProps) {
             .single();
 
         if (error) {
-            alert('Error al asignar tripulante: ' + error.message);
+            toast({ variant: "destructive", title: "Error", description: 'Error al asignar: ' + error.message });
         } else {
             setCrew([...crew, data]);
             setSelectedPerson('');
+            toast({ title: "Asignado", description: "Tripulante asignado." });
         }
         setSaving(false);
+    }
+
+    const handleAddCrew = async () => {
+        if (!selectedPerson) return;
+
+        if (crew.find(c => c.person_id === selectedPerson)) {
+            toast({ variant: "destructive", title: "Error", description: "Esta persona ya está asignada." });
+            return;
+        }
+
+        if (selectedRole === 'captain' && crew.some(c => c.role === 'captain')) {
+            setConfirmDialog({
+                open: true,
+                title: 'Capitán ya asignado',
+                description: 'Ya hay un capitán asignado en esta nave. ¿Deseas agregar otro?',
+                label: 'Agregar otro',
+                action: () => executeAddCrew()
+            });
+            return;
+        }
+
+        await executeAddCrew();
     };
 
-    const handleRemoveCrew = async (id: string) => {
-        if (!confirm('¿Quitar a este tripulante?')) return;
+    const executeRemoveCrew = async (id: string) => {
         setSaving(true);
         const { error } = await supabase
-            .from('itinerary_crew')
+            .from('crew_assignments')
             .delete()
             .eq('id', id);
 
         if (error) {
-            alert('Error al eliminar: ' + error.message);
+            toast({ variant: "destructive", title: "Error", description: 'Error al eliminar: ' + error.message });
         } else {
             setCrew(crew.filter(c => c.id !== id));
+            toast({ title: "Eliminado", description: "Tripulante eliminado." });
         }
         setSaving(false);
+    }
+
+    const handleRemoveCrew = async (id: string) => {
+        setConfirmDialog({
+            open: true,
+            title: 'Confirmar eliminación',
+            description: '¿Estás seguro de quitar a este tripulante del itinerario?',
+            label: 'Eliminar',
+            action: () => executeRemoveCrew(id)
+        });
     };
 
     const getRoleLabel = (role: string) => {
@@ -129,7 +171,6 @@ export default function CrewManager({ itinerary, onClose }: CrewManagerProps) {
             default: return role;
         }
     };
-
     const getMissingRoles = () => {
         const currentRoles = crew.map(c => c.role);
         return recommendedRoles.filter(r => !currentRoles.includes(r as any));
@@ -222,13 +263,15 @@ export default function CrewManager({ itinerary, onClose }: CrewManagerProps) {
                                 variant="outline"
                                 role="combobox"
                                 aria-expanded={openCombobox}
-                                className="justify-between"
+                                className="w-full justify-between"
                             >
-                                {selectedPerson
-                                    ? people.find((p) => p.id === selectedPerson)
-                                        ? `${people.find((p) => p.id === selectedPerson)?.first_name} ${people.find((p) => p.id === selectedPerson)?.last_name}`
-                                        : "Seleccionar persona..."
-                                    : "Seleccionar persona..."}
+                                <span className="truncate">
+                                    {selectedPerson
+                                        ? people.find((p) => p.id === selectedPerson)
+                                            ? `${people.find((p) => p.id === selectedPerson)?.first_name} ${people.find((p) => p.id === selectedPerson)?.last_name}`
+                                            : "Seleccionar persona..."
+                                        : "Seleccionar persona..."}
+                                </span>
                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                         </PopoverTrigger>
@@ -266,6 +309,26 @@ export default function CrewManager({ itinerary, onClose }: CrewManagerProps) {
                     <UserPlus className="w-4 h-4 mr-2" /> Asignar
                 </Button>
             </div>
+
+            <AlertDialog open={confirmDialog.open} onOpenChange={(open) => setConfirmDialog(prev => ({ ...prev, open }))}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>{confirmDialog.title}</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            {confirmDialog.description}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => {
+                            confirmDialog.action();
+                            setConfirmDialog(prev => ({ ...prev, open: false }));
+                        }}>
+                            {confirmDialog.label}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

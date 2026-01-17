@@ -27,7 +27,7 @@ export default function ManifestPreview({ itineraryId }: ManifestPreviewProps) {
                 .select(`
                     *,
                     vessel:vessels(*),
-                    crew:itinerary_crew(*, person:people(*)),
+                    crew:crew_assignments(*, person:people(*)),
                     bookings:bookings(*, person:people(*), origin:itinerary_stops(*, location:locations(*)), destination:itinerary_stops(*, location:locations(*)))
                 `)
                 .eq('id', itineraryId)

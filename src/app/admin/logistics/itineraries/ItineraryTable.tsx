@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { Itinerary } from '@/utils/zod_schemas';
+import { createClient } from '@/utils/supabase/client'; // Added
+import { sendItineraryToWebhook } from '@/utils/whatsapp'; // Added
+import { useToast } from "@/hooks/use-toast"; // Added
 import {
     Table,
     TableBody,
@@ -11,10 +14,11 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { Button } from '@/components/ui/button';
-import { Plus, Calendar, Clock, Ship, Trash2, Pencil, Users, FileText } from 'lucide-react';
+import { Plus, Calendar, Clock, Ship, Trash2, Pencil, Users, FileText, Send } from 'lucide-react'; // Added Send
 import CrewManager from './CrewManager';
 import ManifestPreview from './ManifestPreview';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { ManifestDocument } from '@/components/pdf/ManifestDocument'; // Added import
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import ItineraryForm from './ItineraryForm';
 import BookingManager from './BookingManager';
@@ -36,6 +40,8 @@ interface ItineraryWithRelations extends Omit<Itinerary, 'stops'> {
 }
 
 export default function ItineraryTable() {
+    const supabase = createClient(); // Added
+    const { toast } = useToast(); // Added
     const [itineraries, setItineraries] = useState<ItineraryWithRelations[]>([]);
     const [loading, setLoading] = useState(true);
     const [isOpen, setIsOpen] = useState(false);
@@ -63,6 +69,95 @@ export default function ItineraryTable() {
     useEffect(() => {
         fetchItineraries();
     }, []);
+
+    const [notifyDialog, setNotifyDialog] = useState<{ open: boolean, itinerary: ItineraryWithRelations | null }>({ open: false, itinerary: null });
+    const [notifyOptions, setNotifyOptions] = useState({ crew: true, passengers: true });
+
+    const openNotifyDialog = (itinerary: ItineraryWithRelations) => {
+        setNotifyDialog({ open: true, itinerary });
+        setNotifyOptions({ crew: true, passengers: true }); // Default both checked
+    };
+
+    const handleConfirmSend = async (target: 'passengers' | 'crew') => {
+        if (!notifyDialog.itinerary) return;
+        setNotifyDialog(prev => ({ ...prev, open: false }));
+        await executeSendWebhook(notifyDialog.itinerary, target);
+    };
+
+    const executeSendWebhook = async (itinerary: ItineraryWithRelations, target: 'passengers' | 'crew') => {
+        toast({ title: "Procesando...", description: `Notificando a ${target === 'passengers' ? 'Pasajeros' : 'Tripulación'}...` });
+
+        try {
+            let crewList: any[] = [];
+            let bookingsList: any[] = [];
+
+            // 1. Fetch Crew (Always needed for the PDF Captain context, but filtered for notification payload)
+            const { data: crewData, error: crewError } = await supabase
+                .from('crew_assignments')
+                .select('*, person:people(*)')
+                .eq('itinerary_id', itinerary.id);
+
+            if (crewError) throw new Error("No se pudo obtener la tripulación");
+            crewList = crewData || [];
+
+            // 2. Fetch Passengers
+            const { data: bookingsData, error: bookingsError } = await supabase
+                .from('bookings')
+                .select('*, passenger:people(*), origin_stop:itinerary_stops!bookings_origin_stop_id_fkey(*, location:locations(*)), destination_stop:itinerary_stops!bookings_destination_stop_id_fkey(*, location:locations(*))')
+                .eq('itinerary_id', itinerary.id)
+                .neq('status', 'cancelled');
+
+            if (bookingsError) {
+                console.error("Error fetching bookings:", bookingsError);
+                throw new Error(`Error obteniendo pasajeros: ${bookingsError.message} (${bookingsError.code})`);
+            }
+            bookingsList = bookingsData || [];
+
+            // 3. Generate PDF Blob (Always needed for Captain)
+            const { pdf } = await import('@react-pdf/renderer');
+            const blob = await pdf(
+                <ManifestDocument
+                    vesselName={itinerary.vessel?.name || 'Nave Desconocida'}
+                    itineraryDate={formatDate(itinerary.date)}
+                    startTime={itinerary.start_time}
+                    passengers={bookingsList}
+                />
+            ).toBlob();
+
+            // 4. Upload PDF to Supabase
+            const fileName = `manifest_${itinerary.id}_${Date.now()}.pdf`;
+            const { error: uploadError } = await supabase
+                .storage
+                .from('manifests')
+                .upload(fileName, blob, {
+                    contentType: 'application/pdf',
+                    upsert: true
+                });
+
+            if (uploadError) throw new Error(`Error subiendo PDF: ${uploadError.message}`);
+
+            // 5. Get Public URL
+            const { data: { publicUrl } } = supabase
+                .storage
+                .from('manifests')
+                .getPublicUrl(fileName);
+
+            // 6. Send to Webhook
+            // Add the target to the itinerary object for the utility to read
+            const itinWithTarget = { ...itinerary, target };
+            const result = await sendItineraryToWebhook(itinWithTarget, crewList, publicUrl, bookingsList);
+
+            if (result.success) {
+                toast({ className: "bg-green-500 text-white", title: "¡Enviado!", description: `Notificación a ${target === 'passengers' ? 'pasajeros' : 'tripulación'} exitosa.` });
+            } else {
+                toast({ variant: "destructive", title: "Error n8n", description: result.error });
+            }
+
+        } catch (error: any) {
+            console.error(error);
+            toast({ variant: "destructive", title: "Error", description: error.message });
+        }
+    };
 
     const handleDelete = async () => {
         if (!deletingItinerary) return;
@@ -186,6 +281,9 @@ export default function ItineraryTable() {
                                             <Button variant="ghost" size="sm" onClick={() => setViewingManifest(itin)} title="Manifiesto">
                                                 <FileText className="w-4 h-4 text-green-600" />
                                             </Button>
+                                            <Button variant="ghost" size="sm" onClick={() => openNotifyDialog(itin)} title="Enviar a n8n">
+                                                <Send className="w-4 h-4 text-purple-600" />
+                                            </Button>
                                             <Button variant="outline" size="sm" onClick={() => setManagingItinerary(itin)}>
                                                 Reservas
                                             </Button>
@@ -228,6 +326,12 @@ export default function ItineraryTable() {
 
             <Dialog open={!!managingCrew} onOpenChange={(open) => !open && setManagingCrew(null)}>
                 <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle>Gestionar Tripulación</DialogTitle>
+                        <DialogDescription>
+                            Asigne o elimine miembros de la tripulación para este itinerario.
+                        </DialogDescription>
+                    </DialogHeader>
                     {managingCrew && <CrewManager itinerary={managingCrew} onClose={() => setManagingCrew(null)} />}
                 </DialogContent>
             </Dialog>
@@ -237,6 +341,49 @@ export default function ItineraryTable() {
                     {viewingManifest && viewingManifest.id && <ManifestPreview itineraryId={viewingManifest.id} />}
                 </DialogContent>
             </Dialog>
+
+            {/* Notification Selection Dialog */}
+            <AlertDialog open={notifyDialog.open} onOpenChange={(open) => !open && setNotifyDialog(prev => ({ ...prev, open: false }))}>
+                <AlertDialogContent className="max-w-md">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="text-xl">Notificar Viaje</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            ¿A quién desea enviar las notificaciones de WhatsApp?
+                            <br /><span className="text-xs text-muted-foreground">(Se enviará un mensaje individual a cada persona)</span>
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+
+                    <div className="grid grid-cols-1 gap-3 py-4">
+                        <Button
+                            variant="outline"
+                            className="h-16 flex flex-col items-center justify-center gap-1 hover:border-blue-500 hover:bg-blue-50/50 group"
+                            onClick={() => handleConfirmSend('passengers')}
+                        >
+                            <div className="flex items-center gap-2 font-semibold text-blue-700">
+                                <Users className="w-5 h-5" />
+                                Notificar Pasajeros
+                            </div>
+                            <span className="text-xs text-muted-foreground font-normal">Link de rastreo personalizado</span>
+                        </Button>
+
+                        <Button
+                            variant="outline"
+                            className="h-16 flex flex-col items-center justify-center gap-1 hover:border-orange-500 hover:bg-orange-50/50 group"
+                            onClick={() => handleConfirmSend('crew')}
+                        >
+                            <div className="flex items-center gap-2 font-semibold text-orange-700">
+                                <Ship className="w-5 h-5" />
+                                Notificar Tripulación
+                            </div>
+                            <span className="text-xs text-muted-foreground font-normal">Manifiesto PDF para el Capitán</span>
+                        </Button>
+                    </div>
+
+                    <AlertDialogFooter className="sm:justify-center">
+                        <AlertDialogCancel className="w-full sm:w-auto">Cerrar</AlertDialogCancel>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }
