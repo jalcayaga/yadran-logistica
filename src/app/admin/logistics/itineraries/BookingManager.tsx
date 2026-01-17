@@ -383,6 +383,7 @@ export default function BookingManager({ itinerary }: BookingManagerProps) {
                                 const blob = await pdf(
                                     <ManifestDocument
                                         vesselName={itinerary.vessel?.name || 'Nave Desconocida'}
+                                        vesselRegistration={itinerary.vessel?.registration_number}
                                         itineraryDate={formatDate(itinerary.date)}
                                         startTime={itinerary.start_time}
                                         passengers={bookings}
