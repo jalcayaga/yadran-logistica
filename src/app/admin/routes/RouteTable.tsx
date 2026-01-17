@@ -231,7 +231,7 @@ export default function RouteTable() {
                                         <TableCell className="py-4 px-6">
                                             <Badge variant="outline" className={cn(
                                                 "px-2 py-0 font-bold text-[9px] uppercase border",
-                                                route.mode === 'maritimo' ? 'bg-blue-50 text-blue-700 border-blue-100' : 'bg-slate-50 text-slate-700 border-slate-100'
+                                                route.mode === 'lancha' ? 'bg-blue-50 text-blue-700 border-blue-100' : 'bg-slate-50 text-slate-700 border-slate-100'
                                             )}>
                                                 {route.mode}
                                             </Badge>
