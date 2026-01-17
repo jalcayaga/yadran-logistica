@@ -165,26 +165,31 @@ export default function DailyPlanCard({ itinerary }: DailyPlanCardProps) {
                     <div className="relative pl-7 py-1">
                         <div className="absolute left-[11px] top-3 bottom-3 w-0.5 bg-dashed border-l border-slate-200 dark:border-slate-800" />
 
-                        <div className="flex flex-col gap-6">
-                            <div className="flex items-center gap-4 relative">
-                                <div className="absolute left-[-24px] z-10 bg-blue-500 p-1 rounded-full shadow-lg shadow-blue-500/20 ring-4 ring-white dark:ring-slate-900">
-                                    <Anchor className="w-2.5 h-2.5 text-white" />
-                                </div>
-                                <div className="flex flex-col">
-                                    <span className="text-[9px] text-muted-foreground font-black uppercase tracking-widest leading-none mb-1">ORIGEN</span>
-                                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200">{origin}</span>
-                                </div>
-                            </div>
-
-                            <div className="flex items-center gap-4 relative">
-                                <div className="absolute left-[-24px] z-10 bg-emerald-500 p-1 rounded-full shadow-lg shadow-emerald-500/20 ring-4 ring-white dark:ring-slate-900">
-                                    <Navigation className="w-2.5 h-2.5 text-white" />
-                                </div>
-                                <div className="flex flex-col">
-                                    <span className="text-[9px] text-muted-foreground font-black uppercase tracking-widest leading-none mb-1">DESTINO</span>
-                                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200">{destination}</span>
-                                </div>
-                            </div>
+                        <div className="flex flex-col gap-4">
+                            {sortedStops.map((stop, index) => {
+                                const isFirst = index === 0;
+                                const isLast = index === sortedStops.length - 1;
+                                return (
+                                    <div key={stop.id} className="flex items-center gap-4 relative">
+                                        <div className={cn(
+                                            "absolute left-[-24px] z-10 p-1 rounded-full shadow-lg ring-4 ring-white dark:ring-slate-900",
+                                            isFirst ? "bg-blue-500 shadow-blue-500/20" :
+                                                isLast ? "bg-emerald-500 shadow-emerald-500/20" :
+                                                    "bg-slate-400 shadow-slate-400/20"
+                                        )}>
+                                            {isFirst ? <Anchor className="w-2.5 h-2.5 text-white" /> :
+                                                isLast ? <Navigation className="w-2.5 h-2.5 text-white" /> :
+                                                    <MapPin className="w-2.5 h-2.5 text-white" />}
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="text-[8px] text-muted-foreground font-black uppercase tracking-widest leading-none mb-1">
+                                                {isFirst ? 'ZARPE' : isLast ? 'DESTINO FINAL' : `PARADA ${index}`}
+                                            </span>
+                                            <span className="text-xs font-bold text-slate-800 dark:text-slate-200">{stop.location?.name}</span>
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
 

@@ -70,7 +70,7 @@ export default function ItineraryTable() {
     const fetchItineraries = async () => {
         setLoading(true);
         try {
-            const res = await fetch('/api/itineraries');
+            const res = await fetch('/api/itineraries', { cache: 'no-store' });
             if (res.ok) {
                 const data = await res.json();
                 setItineraries(data);

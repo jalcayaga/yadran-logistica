@@ -67,12 +67,14 @@ const styles = StyleSheet.create({
         borderColor: '#000',
         padding: 5,
     },
-    colNum: { width: '5%' },
-    colName: { width: '35%' },
-    colRut: { width: '15%' },
-    colOrg: { width: '22.5%' },
-    colDst: { width: '22.5%' },
-    colNat: { width: '5%' }, // Nacionalidad
+    colNum: { width: '4%' },
+    colName: { width: '22%' },
+    colRut: { width: '12%' },
+    colCompany: { width: '15%' },
+    colJob: { width: '15%' },
+    colOrg: { width: '16%' },
+    colDst: { width: '16%' },
+    colNat: { width: '5%' },
 
     footer: {
         position: 'absolute',
@@ -148,8 +150,10 @@ export const ManifestDocument = ({ vesselName, vesselRegistration, itineraryDate
                     {/* Header */}
                     <View style={[styles.tableRow, styles.tableHeader]}>
                         <View style={[styles.tableCol, styles.colNum]}><Text>N°</Text></View>
-                        <View style={[styles.tableCol, styles.colName]}><Text>Nombre Completo</Text></View>
-                        <View style={[styles.tableCol, styles.colRut]}><Text>RUT / ID</Text></View>
+                        <View style={[styles.tableCol, styles.colName]}><Text>Nombre</Text></View>
+                        <View style={[styles.tableCol, styles.colRut]}><Text>RUT</Text></View>
+                        <View style={[styles.tableCol, styles.colCompany]}><Text>Empresa</Text></View>
+                        <View style={[styles.tableCol, styles.colJob]}><Text>Cargo</Text></View>
                         <View style={[styles.tableCol, styles.colOrg]}><Text>Origen</Text></View>
                         <View style={[styles.tableCol, styles.colDst]}><Text>Destino</Text></View>
                     </View>
@@ -165,8 +169,10 @@ export const ManifestDocument = ({ vesselName, vesselRegistration, itineraryDate
                                 <View style={[styles.tableCol, styles.colNum]}><Text>{index + 1}</Text></View>
                                 <View style={[styles.tableCol, styles.colName]}><Text>{p.passenger?.first_name} {p.passenger?.last_name}</Text></View>
                                 <View style={[styles.tableCol, styles.colRut]}><Text>{p.passenger?.rut_display || 'S/I'}</Text></View>
-                                <View style={[styles.tableCol, styles.colOrg]}><Text>{p.origin_stop?.location?.name || p.origin?.location?.name}</Text></View>
-                                <View style={[styles.tableCol, styles.colDst]}><Text>{p.destination_stop?.location?.name || p.destination?.location?.name}</Text></View>
+                                <View style={[styles.tableCol, styles.colCompany]}><Text>{p.passenger?.company || '---'}</Text></View>
+                                <View style={[styles.tableCol, styles.colJob]}><Text>{p.passenger?.job_title || '---'}</Text></View>
+                                <View style={[styles.tableCol, styles.colOrg]}><Text>{p.origin_stop?.location?.name || p.origin?.location?.name || '---'}</Text></View>
+                                <View style={[styles.tableCol, styles.colDst]}><Text>{p.destination_stop?.location?.name || p.destination?.location?.name || '---'}</Text></View>
                             </View>
                         ))
                     )}

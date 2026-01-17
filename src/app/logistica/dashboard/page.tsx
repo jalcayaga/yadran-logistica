@@ -35,7 +35,7 @@ export default function LogisticsDashboard() {
         setLoading(true);
         setError(null);
         try {
-            const res = await fetch('/api/itineraries');
+            const res = await fetch('/api/itineraries', { cache: 'no-store' });
             if (!res.ok) {
                 const errData = await res.json();
                 throw new Error(errData.error || 'Err. Servidor');

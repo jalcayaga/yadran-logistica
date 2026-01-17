@@ -45,7 +45,7 @@ export default function ItineraryForm({ onSuccess, initialData }: ItineraryFormP
     } = useForm<ItineraryFormData>({
         resolver: zodResolver(itinerarySchema),
         defaultValues: initialData || {
-            date: new Date().toISOString().split('T')[0],
+            date: new Date().toLocaleDateString('en-CA'),
             start_time: '08:00',
             status: 'scheduled',
             stops: [

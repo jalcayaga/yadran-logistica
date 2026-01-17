@@ -77,30 +77,31 @@ export const sendItineraryToWebhook = async (itinerary: any, crew: any[], manife
         // Assuming stops are ordered.
         const stops = itinerary.stops || [];
         const sortedStops = [...stops].sort((a: any, b: any) => a.stop_order - b.stop_order);
-        const origin = sortedStops.length > 0 ? sortedStops[0].location?.name : 'Origen';
-        const dest = sortedStops.length > 1 ? sortedStops[sortedStops.length - 1].location?.name : 'Destino';
-        const route = `${origin} -> ${dest}`;
+        const fullRoute = sortedStops.map((s: any) => s.location?.name || '---').join(' -> ');
 
         const payload = {
             event: 'manual_send',
-            target: itinerary.target || 'all', // new field
+            target: itinerary.target || 'all',
             itinerary: {
                 ...itinerary,
-                date_formatted: new Date(itinerary.date).toLocaleDateString('es-CL'),
+                date_formatted: formatDate(itinerary.date),
                 vessel_name: itinerary.vessel?.name || 'Nave por asignar',
-                route: route
+                route: fullRoute
             },
             crew: crew.map(c => ({
                 name: `${c.person.first_name} ${c.person.last_name}`,
                 role: c.role,
-                phone: c.person.phone_e164
+                phone: c.person.phone_e164,
+                confirmation_link: c.confirmation_link
             })),
             passengers: passengers.map(p => ({
                 name: p.passenger?.first_name ? `${p.passenger.first_name} ${p.passenger.last_name}` : 'Pasajero',
                 phone: p.passenger?.phone_e164 || '',
-                role: 'passenger'
+                role: 'passenger',
+                origin: p.origin_stop?.location?.name || '---',
+                destination: p.destination_stop?.location?.name || '---'
             })),
-            manifest_pdf: manifestUrl, // Pass the PDF link
+            manifest_pdf: manifestUrl,
             timestamp: new Date().toISOString()
         };
 
