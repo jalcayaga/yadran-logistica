@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { createClient } from '@/utils/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Printer, MessageSquare, Send } from 'lucide-react';
+import { Printer, MessageSquare, Send, FileText } from 'lucide-react';
+import { ManifestDocument } from '@/components/pdf/ManifestDocument';
 import { formatDate } from "@/utils/formatters";
 import { getCaptainManifestLink, getPassengerNotificationLink } from "@/utils/whatsapp";
 
@@ -16,6 +17,7 @@ export default function ManifestPreview({ itineraryId }: ManifestPreviewProps) {
     const supabase = createClient();
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [downloading, setDownloading] = useState(false);
 
     useEffect(() => {
         const fetchManifest = async () => {
@@ -53,6 +55,38 @@ export default function ManifestPreview({ itineraryId }: ManifestPreviewProps) {
         window.print();
     };
 
+    const handleDownload = async () => {
+        if (!data) return;
+        setDownloading(true);
+        try {
+            const { pdf } = await import('@react-pdf/renderer');
+            const blob = await pdf(
+                <ManifestDocument
+                    vesselName={data.vessel?.name || 'Nave Desconocida'}
+                    vesselRegistration={data.vessel?.registration_number}
+                    itineraryDate={formatDate(data.date)}
+                    startTime={data.start_time}
+                    passengers={data.bookings || []}
+                    crew={data.crew || []}
+                />
+            ).toBlob();
+
+            const pdfBlob = new Blob([blob], { type: 'application/pdf' });
+            const url = URL.createObjectURL(pdfBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `manifiesto_${data.date}_${data.vessel?.name?.replace(/\s+/g, '_')}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        } catch (e) {
+            console.error("Error generating PDF:", e);
+        } finally {
+            setDownloading(false);
+        }
+    };
+
     if (loading) return <div>Cargando manifiesto...</div>;
     if (!data) return <div>No se pudo cargar el manifiesto.</div>;
 
@@ -68,9 +102,15 @@ export default function ManifestPreview({ itineraryId }: ManifestPreviewProps) {
         <div className="p-8 bg-white text-black print:p-0">
             <div className="flex justify-between items-start mb-8 print:hidden">
                 <h2 className="text-2xl font-bold">Manifiesto de Pasajeros</h2>
-                <Button onClick={handlePrint}>
-                    <Printer className="w-4 h-4 mr-2" /> Imprimir
-                </Button>
+                <div className="flex gap-2">
+                    <Button variant="outline" onClick={handleDownload} disabled={downloading}>
+                        <FileText className="w-4 h-4 mr-2 text-blue-500" />
+                        {downloading ? 'Generando...' : 'Descargar PDF'}
+                    </Button>
+                    <Button onClick={handlePrint}>
+                        <Printer className="w-4 h-4 mr-2" /> Imprimir
+                    </Button>
+                </div>
             </div>
 
             {/* Header for Print */}

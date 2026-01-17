@@ -19,6 +19,8 @@ import {
     Fingerprint
 } from "lucide-react";
 import { Itinerary } from '@/utils/zod_schemas';
+import ManifestPreview from "@/app/admin/logistics/itineraries/ManifestPreview";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
@@ -49,6 +51,7 @@ export default function DailyPlanCard({ itinerary }: DailyPlanCardProps) {
     const router = useRouter();
     const { toast } = useToast();
     const [isStarting, setIsStarting] = useState(false);
+    const [viewingManifest, setViewingManifest] = useState(false);
 
     const sortedStops = itinerary.stops?.sort((a, b) => a.stop_order - b.stop_order) || [];
     const origin = sortedStops[0]?.location?.name || 'S/I';
@@ -272,7 +275,11 @@ export default function DailyPlanCard({ itinerary }: DailyPlanCardProps) {
 
                 {/* Footer Actions */}
                 <div className="p-3 bg-slate-50 dark:bg-slate-950/20 border-t border-slate-100 dark:border-slate-800/50 grid grid-cols-2 gap-2">
-                    <Button variant="ghost" className="h-10 text-[10px] font-black uppercase text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 rounded-xl transition-all active:scale-95">
+                    <Button
+                        variant="ghost"
+                        className="h-10 text-[10px] font-black uppercase text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 rounded-xl transition-all active:scale-95"
+                        onClick={() => setViewingManifest(true)}
+                    >
                         <FileText className="w-4 h-4 mr-2 text-emerald-500" /> Manifiesto
                     </Button>
 
@@ -299,6 +306,21 @@ export default function DailyPlanCard({ itinerary }: DailyPlanCardProps) {
                     )}
                 </div>
             </CardContent>
+
+            <Dialog open={viewingManifest} onOpenChange={setViewingManifest}>
+                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl flex items-center gap-2">
+                            <FileText className="w-5 h-5 text-emerald-600" />
+                            Vista Previa de Manifiesto
+                        </DialogTitle>
+                        <DialogDescription className="font-normal text-slate-500 text-sm">
+                            Detalle de tripulación y pasajeros para {itinerary.vessel?.name}.
+                        </DialogDescription>
+                    </DialogHeader>
+                    {viewingManifest && <ManifestPreview itineraryId={itinerary.id!} />}
+                </DialogContent>
+            </Dialog>
         </Card>
     );
 }

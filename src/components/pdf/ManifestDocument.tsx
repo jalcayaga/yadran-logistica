@@ -167,12 +167,16 @@ export const ManifestDocument = ({ vesselName, vesselRegistration, itineraryDate
                         passengers.map((p, index) => (
                             <View style={styles.tableRow} key={index}>
                                 <View style={[styles.tableCol, styles.colNum]}><Text>{index + 1}</Text></View>
-                                <View style={[styles.tableCol, styles.colName]}><Text>{p.passenger?.first_name} {p.passenger?.last_name}</Text></View>
-                                <View style={[styles.tableCol, styles.colRut]}><Text>{p.passenger?.rut_display || 'S/I'}</Text></View>
-                                <View style={[styles.tableCol, styles.colCompany]}><Text>{p.passenger?.company || '---'}</Text></View>
-                                <View style={[styles.tableCol, styles.colJob]}><Text>{p.passenger?.job_title || '---'}</Text></View>
-                                <View style={[styles.tableCol, styles.colOrg]}><Text>{p.origin_stop?.location?.name || p.origin?.location?.name || '---'}</Text></View>
-                                <View style={[styles.tableCol, styles.colDst]}><Text>{p.destination_stop?.location?.name || p.destination?.location?.name || '---'}</Text></View>
+                                <View style={[styles.tableCol, styles.colName]}><Text>{(p.passenger || p.person)?.first_name} {(p.passenger || p.person)?.last_name}</Text></View>
+                                <View style={[styles.tableCol, styles.colRut]}><Text>{(p.passenger || p.person)?.rut_display || 'S/I'}</Text></View>
+                                <View style={[styles.tableCol, styles.colCompany]}><Text>{(p.passenger || p.person)?.company || '---'}</Text></View>
+                                <View style={[styles.tableCol, styles.colJob]}><Text>{(p.passenger || p.person)?.job_title || '---'}</Text></View>
+                                <View style={[styles.tableCol, styles.colOrg]}><Text>
+                                    {(p.origin_stop?.location?.name || p.origin?.location?.name || '---')}
+                                </Text></View>
+                                <View style={[styles.tableCol, styles.colDst]}><Text>
+                                    {(p.destination_stop?.location?.name || p.destination?.location?.name || '---')}
+                                </Text></View>
                             </View>
                         ))
                     )}

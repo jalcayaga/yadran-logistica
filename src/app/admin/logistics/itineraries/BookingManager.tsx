@@ -10,6 +10,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Plus, Trash2, AlertCircle, FileText, Pencil, Check, ChevronsUpDown, Upload, FileSpreadsheet } from 'lucide-react';
+import ManifestPreview from "@/app/admin/logistics/itineraries/ManifestPreview";
 import { Itinerary, Person } from '@/utils/zod_schemas';
 import { ManifestDocument } from '@/components/pdf/ManifestDocument';
 import { useToast } from "@/hooks/use-toast";
@@ -66,6 +67,7 @@ export default function BookingManager({ itinerary }: BookingManagerProps) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [viewingManifest, setViewingManifest] = useState(false);
     const { toast } = useToast();
 
     // Bulk Upload State
@@ -375,40 +377,10 @@ export default function BookingManager({ itinerary }: BookingManagerProps) {
                     <Button
                         variant="outline"
                         size="sm"
-                        disabled={loading}
-                        onClick={async () => {
-                            try {
-                                setLoading(true);
-                                const { pdf } = await import('@react-pdf/renderer');
-                                const blob = await pdf(
-                                    <ManifestDocument
-                                        vesselName={itinerary.vessel?.name || 'Nave Desconocida'}
-                                        vesselRegistration={itinerary.vessel?.registration_number}
-                                        itineraryDate={formatDate(itinerary.date)}
-                                        startTime={itinerary.start_time}
-                                        passengers={bookings}
-                                        crew={crew}
-                                    />
-                                ).toBlob();
-
-                                const url = URL.createObjectURL(blob);
-                                const link = document.createElement('a');
-                                link.href = url;
-                                link.download = `manifiesto_${itinerary.date}_${itinerary.vessel?.name?.replace(/\s+/g, '_')}.pdf`;
-                                document.body.appendChild(link);
-                                link.click();
-                                document.body.removeChild(link);
-                                URL.revokeObjectURL(url);
-                            } catch (e) {
-                                console.error("Error generating PDF:", e);
-                                setError('Error al generar el manifiesto PDF');
-                            } finally {
-                                setLoading(false);
-                            }
-                        }}
+                        onClick={() => setViewingManifest(true)}
                     >
                         <FileText className="w-4 h-4 mr-2" />
-                        {loading ? 'Generando PDF...' : 'Descargar Manifiesto'}
+                        Ver Manifiesto
                     </Button>
                 )}
             </div>
@@ -675,6 +647,21 @@ export default function BookingManager({ itinerary }: BookingManagerProps) {
                     </TableBody>
                 </Table>
             </div>
+
+            <Dialog open={viewingManifest} onOpenChange={setViewingManifest}>
+                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl flex items-center gap-2">
+                            <FileText className="w-5 h-5 text-emerald-600" />
+                            Vista Previa de Manifiesto
+                        </DialogTitle>
+                        <DialogDescription className="font-normal text-slate-500 text-sm">
+                            Detalle de tripulación y pasajeros para {itinerary.vessel?.name}.
+                        </DialogDescription>
+                    </DialogHeader>
+                    {viewingManifest && <ManifestPreview itineraryId={itinerary.id} />}
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
