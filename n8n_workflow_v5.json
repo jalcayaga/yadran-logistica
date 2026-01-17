@@ -1,0 +1,331 @@
+{
+    "name": "Envío WhatsApp Yadran v5 (FINAL - Targeted)",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "816f4c91-139e-41d8-958d-48ce9d497136",
+                "responseMode": "onReceived",
+                "options": {}
+            },
+            "name": "Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                280,
+                300
+            ],
+            "webhookId": "816f4c91-139e-41d8-958d-48ce9d497136"
+        },
+        {
+            "parameters": {
+                "jsCode": "// Simplificar el objeto: sacar todo lo que viene en 'body'\nreturn $input.item.json.body || $input.item.json;"
+            },
+            "name": "Extract Body",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 1,
+            "position": [
+                480,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "dataType": "string",
+                "value1": "={{ $json.event === 'manual_send' ? $json.target : ($json.event === 'itinerary_status_change' ? 'all' : 'passengers') }}",
+                "rules": {
+                    "rules": [
+                        {
+                            "value2": "passengers",
+                            "output": 0
+                        },
+                        {
+                            "value2": "crew",
+                            "output": 1
+                        },
+                        {
+                            "value2": "all",
+                            "output": 2
+                        }
+                    ]
+                },
+                "fallbackOutput": 0
+            },
+            "name": "Event Router",
+            "type": "n8n-nodes-base.switch",
+            "typeVersion": 1,
+            "position": [
+                680,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "fieldToSplitOut": "passengers",
+                "options": {
+                    "ignoreItemIfMissing": true
+                }
+            },
+            "name": "Split Passengers",
+            "type": "n8n-nodes-base.itemLists",
+            "typeVersion": 1,
+            "position": [
+                940,
+                180
+            ]
+        },
+        {
+            "parameters": {
+                "fieldToSplitOut": "crew",
+                "options": {
+                    "ignoreItemIfMissing": true
+                }
+            },
+            "name": "Split Crew",
+            "type": "n8n-nodes-base.itemLists",
+            "typeVersion": 1,
+            "position": [
+                940,
+                420
+            ]
+        },
+        {
+            "parameters": {
+                "jsCode": "const p = $input.item.json;\nconst root = $('Extract Body').first().json;\nconst itinerary = root.itinerary || {};\nconst trackingLink = root.tracking_link || '';\nconst newStatus = itinerary.new_status;\nconst tripTime = itinerary.start_time || itinerary.time || '08:00';\nconst tripDate = itinerary.date_formatted || itinerary.date || '';\n\nlet title = '🛳️ CONFIRMACIÓN DE VIAJE';\nlet footerText = 'Por favor llegar o estar listo 15 min antes.';\n\nif (newStatus === 'cancelled') {\n  title = '⚠️ AVISO DE CANCELACIÓN ⚠️';\n  footerText = 'Lamentamos los inconvenientes.';\n} else if (newStatus === 'suspended') {\n  title = '⚠️ AVISO DE SUSPENSIÓN ⚠️';\n  footerText = 'Lamentamos los inconvenientes.';\n}\n\nlet message = `*${title}*\\n\\n` +\n`Hola ${p.name}, recordamos tu viaje con Logística Yadran.\\n\\n` +\n`📅 *Fecha:* ${tripDate} ${tripTime}\\n` +\n`🚢 *Nave:* ${itinerary.vessel_name || 'Nave'}\\n` +\n`📍 *Ruta:* ${itinerary.route || 'Yadran'}\\n\\n`;\n\nif (trackingLink) {\n  message += `🔗 *Sigue el estado de tu viaje aquí:*\\n${trackingLink}\\n\\n`;\n}\n\nmessage += `⚠️ *Mensaje automático: No respondas a este chat.*\\n\\n${footerText} ¡Buen viaje!`;\n\nconst cleanPhone = (p.phone || '').replace(/\\D/g, '');\nconst finalNumber = cleanPhone.startsWith('56') ? cleanPhone : '56' + cleanPhone;\n\nreturn {\n  json: {\n    number: finalNumber,\n    text: message,\n    delay: 1500,\n    linkPreview: true\n  }\n};"
+            },
+            "name": "Format Passenger Msg",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 1,
+            "position": [
+                1160,
+                180
+            ]
+        },
+        {
+            "parameters": {
+                "jsCode": "const crew = $input.item.json;\nconst root = $('Extract Body').first().json;\nconst itinerary = root.itinerary || {};\nconst tripTime = itinerary.start_time || itinerary.time || '08:00';\nconst tripDate = itinerary.date_formatted || itinerary.date || '';\n\nconst roleName = crew.role === 'captain' ? 'Capitán' : crew.role === 'substitute' ? 'Patrón' : 'Tripulante';\nconst roleEmoji = crew.role === 'captain' ? '👨‍✈️' : '🧑‍🔧';\n\nlet message = `⚓ *Asignación Logística Yadran* ⚓\\n\\n` +\n`Hola ${crew.name}, has sido asignado como *${roleName}* ${roleEmoji}.\\n\\n` +\n`📅 *Fecha:* ${tripDate} ${tripTime}\\n` +\n`🚢 *Nave:* ${itinerary.vessel_name || 'Nave'}\\n` +\n`📍 *Ruta:* ${itinerary.route || 'Yadran'}\\n\\n`;\n\nmessage += `⚠️ *Mensaje automático: No respondas a este chat.*\\n\\nPor favor confirma tu asistencia.`;\n\nconst cleanPhone = (crew.phone || '').replace(/\\D/g, '');\nconst finalNumber = cleanPhone.startsWith('56') ? cleanPhone : '56' + cleanPhone;\n\nreturn {\n  json: {\n    number: finalNumber,\n    text: message,\n    delay: 1500,\n    linkPreview: true,\n    isCaptain: (crew.role === 'captain' || crew.role === 'substitute'),\n    manifestUrl: root.manifest_pdf\n  }\n};"
+            },
+            "name": "Format Crew Msg",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 1,
+            "position": [
+                1160,
+                420
+            ]
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "https://arevoapi.artifact.cl/message/sendText/yadran-produccion",
+                "authentication": "genericCredentialType",
+                "genericAuthType": "headerAuth",
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={{ JSON.stringify({\n  \"number\": $json.number,\n  \"text\": $json.text,\n  \"delay\": 1200,\n  \"linkPreview\": true\n}) }}",
+                "options": {}
+            },
+            "name": "Send WhatsApp Passenger",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 1,
+            "position": [
+                1380,
+                180
+            ],
+            "credentials": {
+                "httpHeaderAuth": {
+                    "id": "1",
+                    "name": "Evolution API Key"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "https://arevoapi.artifact.cl/message/sendText/yadran-produccion",
+                "authentication": "genericCredentialType",
+                "genericAuthType": "headerAuth",
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={{ JSON.stringify({\n  \"number\": $json.number,\n  \"text\": $json.text,\n  \"delay\": 1200,\n  \"linkPreview\": true\n}) }}",
+                "options": {}
+            },
+            "name": "Send WhatsApp Crew",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 1,
+            "position": [
+                1380,
+                420
+            ],
+            "credentials": {
+                "httpHeaderAuth": {
+                    "id": "1",
+                    "name": "Evolution API Key"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "boolean": [
+                        {
+                            "value1": "={{ $json.isCaptain && !!$json.manifestUrl }}",
+                            "value2": true
+                        }
+                    ]
+                }
+            },
+            "name": "Is Captain & Has PDF?",
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 1,
+            "position": [
+                1600,
+                420
+            ]
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "https://arevoapi.artifact.cl/message/sendMedia/yadran-produccion",
+                "authentication": "genericCredentialType",
+                "genericAuthType": "headerAuth",
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={{ JSON.stringify({\n  \"number\": $json.number,\n  \"mediaMessage\": {\n    \"mediatype\": \"document\",\n    \"fileName\": \"Manifiesto_Zarpe.pdf\",\n    \"caption\": \"📄 Adjunto Manifiesto de Zarpe\",\n    \"media\": $json.manifestUrl\n  },\n  \"delay\": 2000\n}) }}",
+                "options": {}
+            },
+            "name": "Send Manifest PDF",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 1,
+            "position": [
+                1850,
+                400
+            ],
+            "credentials": {
+                "httpHeaderAuth": {
+                    "id": "1",
+                    "name": "Evolution API Key"
+                }
+            }
+        }
+    ],
+    "connections": {
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "Extract Body",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Extract Body": {
+            "main": [
+                [
+                    {
+                        "node": "Event Router",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Event Router": {
+            "main": [
+                [
+                    {
+                        "node": "Split Passengers",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Split Crew",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Split Passengers",
+                        "type": "main",
+                        "index": 0
+                    },
+                    {
+                        "node": "Split Crew",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Split Passengers": {
+            "main": [
+                [
+                    {
+                        "node": "Format Passenger Msg",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Split Crew": {
+            "main": [
+                [
+                    {
+                        "node": "Format Crew Msg",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Format Passenger Msg": {
+            "main": [
+                [
+                    {
+                        "node": "Send WhatsApp Passenger",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Format Crew Msg": {
+            "main": [
+                [
+                    {
+                        "node": "Send WhatsApp Crew",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Send WhatsApp Crew": {
+            "main": [
+                [
+                    {
+                        "node": "Is Captain & Has PDF?",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Is Captain & Has PDF?": {
+            "main": [
+                [
+                    {
+                        "node": "Send Manifest PDF",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}
