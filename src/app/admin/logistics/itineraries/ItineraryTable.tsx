@@ -171,12 +171,19 @@ export default function ItineraryTable() {
 
     return (
         <Card className="border-none shadow-xl bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-            <CardContent className="p-6">
-                <div className="flex justify-between items-center mb-8 gap-4">
-                    <h2 className="text-xl font-bold flex items-center gap-2 text-slate-700 dark:text-slate-200">
-                        <LayoutDashboard className="w-5 h-5 text-blue-600" />
-                        Logística Semanal
-                    </h2>
+            <CardContent className="p-0">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-6 gap-4 border-b border-slate-100 dark:border-slate-800/50">
+                    <div className="flex flex-col gap-0.5">
+                        <h2 className="text-xl font-extrabold tracking-tight flex items-center gap-2.5 text-slate-900 dark:text-white">
+                            <div className="p-1.5 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                                <LayoutDashboard className="w-5 h-5 text-blue-600" />
+                            </div>
+                            Logística de Operaciones
+                        </h2>
+                        <p className="text-[11px] text-muted-foreground font-medium pl-10">
+                            Estado actual y programación de la flota activa
+                        </p>
+                    </div>
                     <Dialog open={isOpen || !!editingItinerary} onOpenChange={(open) => { if (!open) { setIsOpen(false); setEditingItinerary(null); } }}>
                         <DialogTrigger asChild>
                             <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20 active:scale-95 transition-all font-normal">
@@ -200,15 +207,15 @@ export default function ItineraryTable() {
                     </Dialog>
                 </div>
 
-                <div className="rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-white/30 dark:bg-slate-900/30">
+                <div className="overflow-hidden">
                     <Table>
-                        <TableHeader className="bg-slate-50/50 dark:bg-slate-800/50">
-                            <TableRow className="hover:bg-transparent border-slate-200 dark:border-slate-800">
-                                <TableHead className="py-4 px-6 uppercase text-[10px] font-bold tracking-wider text-slate-500">Fecha y Hora</TableHead>
-                                <TableHead className="py-4 uppercase text-[10px] font-bold tracking-wider text-slate-500">Embarcación</TableHead>
-                                <TableHead className="py-4 uppercase text-[10px] font-bold tracking-wider text-slate-500">Ruta y Paradas</TableHead>
-                                <TableHead className="py-4 text-center uppercase text-[10px] font-bold tracking-wider text-slate-500">Estado</TableHead>
-                                <TableHead className="py-4 text-right pr-6 uppercase text-[10px] font-bold tracking-wider text-slate-500">Gestión</TableHead>
+                        <TableHeader className="bg-slate-50/50 dark:bg-slate-900/50">
+                            <TableRow className="hover:bg-transparent border-slate-200 dark:border-slate-800/50">
+                                <TableHead className="py-4 px-6 uppercase text-xs font-black tracking-widest text-slate-500 dark:text-slate-400/80">Fecha y Hora</TableHead>
+                                <TableHead className="py-4 uppercase text-xs font-black tracking-widest text-slate-500 dark:text-slate-400/80">Embarcación</TableHead>
+                                <TableHead className="py-4 uppercase text-xs font-black tracking-widest text-slate-500 dark:text-slate-400/80">Ruta y Paradas</TableHead>
+                                <TableHead className="py-4 text-center uppercase text-xs font-black tracking-widest text-slate-500 dark:text-slate-400/80">Estado</TableHead>
+                                <TableHead className="py-4 text-right pr-6 uppercase text-xs font-black tracking-widest text-slate-500 dark:text-slate-400/80">Gestión</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>

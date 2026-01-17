@@ -25,11 +25,11 @@ import {
     Filter,
     ShipWheel
 } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import VesselForm from './VesselForm';
 
-type SortKey = 'name' | 'type';
+type SortKey = 'name' | 'registration_number' | 'type' | 'capacity';
 
 export default function VesselTable() {
     const [vessels, setVessels] = useState<Vessel[]>([]);
@@ -114,34 +114,48 @@ export default function VesselTable() {
     };
 
     return (
-        <Card className="border-none shadow-xl bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-            <CardContent className="p-6">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-                    <div className="relative w-full max-w-md group">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-blue-500 transition-colors" />
-                        <Input
-                            placeholder="Buscar nave, tipo o matrícula..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-10 bg-white/80 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 focus-visible:ring-blue-500/20 focus-visible:border-blue-500 ring-offset-0 transition-all"
-                        />
+        <Card className="border-none shadow-xl bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm overflow-hidden">
+            <CardContent className="p-0">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-6 gap-4 border-b border-slate-100 dark:border-slate-800/50">
+                    <div className="flex flex-col gap-0.5">
+                        <h2 className="text-xl font-extrabold tracking-tight flex items-center gap-2.5 text-slate-900 dark:text-white">
+                            <div className="p-1.5 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                                <Ship className="w-5 h-5 text-blue-600" />
+                            </div>
+                            Listado de Flota
+                        </h2>
+                        <p className="text-[11px] text-muted-foreground font-medium pl-10">
+                            Registro oficial de naves y sus capacidades
+                        </p>
                     </div>
 
-                    <div className="flex items-center gap-3 w-full md:w-auto">
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                        <div className="relative w-full sm:w-64 group">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-blue-500 transition-colors" />
+                            <Input
+                                placeholder="Buscar nave o matrícula..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="pl-10 bg-white/80 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 focus-visible:ring-blue-500/20 focus-visible:border-blue-500 transition-all font-normal"
+                            />
+                        </div>
                         <Dialog open={isOpen} onOpenChange={setIsOpen}>
                             <DialogTrigger asChild>
-                                <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20 transition-all active:scale-95 w-full md:w-auto">
+                                <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20 transition-all active:scale-95 font-normal">
                                     <Plus className="mr-2 h-4 w-4" /> Nueva Nave
                                 </Button>
                             </DialogTrigger>
-                            <DialogContent className="sm:max-w-[500px]">
+                            <DialogContent className="sm:max-w-[600px]">
                                 <DialogHeader>
                                     <DialogTitle className="text-xl flex items-center gap-2">
                                         <Ship className="w-5 h-5 text-blue-500" />
-                                        Agregar Nueva Nave
+                                        Registrar Nueva Nave
                                     </DialogTitle>
+                                    <DialogDescription className="font-normal">
+                                        Ingrese los datos técnicos y de capacidad de la embarcación.
+                                    </DialogDescription>
                                 </DialogHeader>
-                                <div className="py-4 font-normal">
+                                <div className="py-2 font-normal">
                                     <VesselForm onSuccess={() => { setIsOpen(false); fetchVessels(); }} />
                                 </div>
                             </DialogContent>
@@ -149,29 +163,27 @@ export default function VesselTable() {
                     </div>
                 </div>
 
-                <div className="rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-white/30 dark:bg-slate-900/30">
+                <div className="overflow-hidden">
                     <Table>
-                        <TableHeader className="bg-slate-50/50 dark:bg-slate-800/50">
-                            <TableRow className="hover:bg-transparent border-slate-200 dark:border-slate-800">
-                                <TableHead
-                                    onClick={() => handleSort('name')}
-                                    className="cursor-pointer hover:text-blue-600 transition-colors py-4 px-6"
-                                >
-                                    <div className="flex items-center gap-2">
-                                        Nave <ArrowUpDown className="h-3 w-3 opacity-50" />
+                        <TableHeader className="bg-slate-50/50 dark:bg-slate-900/50">
+                            <TableRow className="hover:bg-transparent border-slate-200 dark:border-slate-800/50">
+                                <TableHead onClick={() => handleSort('name')} className="cursor-pointer hover:text-blue-600 transition-colors py-4 px-6">
+                                    <div className="flex items-center gap-2 uppercase text-xs font-black tracking-widest text-slate-500 dark:text-slate-400/80">
+                                        Nombre <ArrowUpDown className="h-3 w-3 opacity-50" />
                                     </div>
                                 </TableHead>
-                                <TableHead
-                                    onClick={() => handleSort('type')}
-                                    className="cursor-pointer hover:text-blue-600 transition-colors py-4"
-                                >
-                                    <div className="flex items-center gap-2">
+                                <TableHead className="py-4 uppercase text-xs font-black tracking-widest text-slate-500 dark:text-slate-400/80">Matrícula</TableHead>
+                                <TableHead onClick={() => handleSort('type')} className="cursor-pointer hover:text-blue-600 transition-colors py-4">
+                                    <div className="flex items-center gap-2 uppercase text-xs font-black tracking-widest text-slate-500 dark:text-slate-400/80">
                                         Tipo <ArrowUpDown className="h-3 w-3 opacity-50" />
                                     </div>
                                 </TableHead>
-                                <TableHead className="py-4 text-center">Capacidad</TableHead>
-                                <TableHead className="py-4">Matrícula</TableHead>
-                                <TableHead className="w-[100px] py-4 text-right pr-6">Acciones</TableHead>
+                                <TableHead onClick={() => handleSort('capacity')} className="cursor-pointer hover:text-blue-600 transition-colors py-4">
+                                    <div className="flex items-center gap-2 uppercase text-xs font-black tracking-widest text-slate-500 dark:text-slate-400/80">
+                                        Capacidad <ArrowUpDown className="h-3 w-3 opacity-50" />
+                                    </div>
+                                </TableHead>
+                                <TableHead className="w-[100px] py-4 text-right pr-6 uppercase text-xs font-black tracking-widest text-slate-500 dark:text-slate-400/80">Acciones</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>

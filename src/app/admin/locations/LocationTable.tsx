@@ -138,67 +138,81 @@ export default function LocationTable() {
     };
 
     return (
-        <Card className="border-none shadow-xl bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-            <CardContent className="p-6">
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-                        <TabsList className="bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
-                            <TabsTrigger value="centers" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white">Centros</TabsTrigger>
-                            <TabsTrigger value="ports" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">Puertos</TabsTrigger>
-                            <TabsTrigger value="all">Ver Todos</TabsTrigger>
-                        </TabsList>
-
-                        <div className="flex items-center gap-3 w-full md:w-auto">
-                            <div className="relative w-full md:w-64 group">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-emerald-500 transition-colors" />
-                                <Input
-                                    placeholder="Buscar ubicación..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="pl-10 bg-white/80 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 focus-visible:ring-emerald-500/20 focus-visible:border-emerald-500 transition-all"
-                                />
+        <Card className="border-none shadow-xl bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm overflow-hidden">
+            <CardContent className="p-0">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-6 gap-4 border-b border-slate-100 dark:border-slate-800/50">
+                    <div className="flex flex-col gap-0.5">
+                        <h2 className="text-xl font-extrabold tracking-tight flex items-center gap-2.5 text-slate-900 dark:text-white">
+                            <div className="p-1.5 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
+                                <MapPin className="w-5 h-5 text-emerald-600" />
                             </div>
-                            <Dialog open={isOpen} onOpenChange={setIsOpen}>
-                                <DialogTrigger asChild>
-                                    <Button className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20 transition-all active:scale-95">
-                                        <Plus className="mr-2 h-4 w-4" /> Nuevo
-                                    </Button>
-                                </DialogTrigger>
-                                <DialogContent className="sm:max-w-[500px]">
-                                    <DialogHeader>
-                                        <DialogTitle className="text-xl flex items-center gap-2">
-                                            <MapPin className="w-5 h-5 text-emerald-500" />
-                                            Agregar Ubicación
-                                        </DialogTitle>
-                                    </DialogHeader>
-                                    <div className="py-4 font-normal">
-                                        <LocationForm onSuccess={() => { setIsOpen(false); fetchLocations(); }} />
-                                    </div>
-                                </DialogContent>
-                            </Dialog>
-                        </div>
+                            Red de Locaciones
+                        </h2>
+                        <p className="text-[11px] text-muted-foreground font-medium pl-10">
+                            Puertos, centros y bases operativas registradas
+                        </p>
                     </div>
 
-                    <div className="rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-white/30 dark:bg-slate-900/30">
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                        <div className="relative w-full sm:w-64 group">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-emerald-500 transition-colors" />
+                            <Input
+                                placeholder="Buscar ubicación..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="pl-10 bg-white/80 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 focus-visible:ring-emerald-500/20 focus-visible:border-emerald-500 transition-all font-normal"
+                            />
+                        </div>
+                        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+                            <DialogTrigger asChild>
+                                <Button className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20 transition-all active:scale-95 font-normal">
+                                    <Plus className="mr-2 h-4 w-4" /> Nueva Locación
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-[500px]">
+                                <DialogHeader>
+                                    <DialogTitle className="text-xl flex items-center gap-2">
+                                        <MapPin className="w-5 h-5 text-emerald-500" />
+                                        Registrar Nueva Locación
+                                    </DialogTitle>
+                                </DialogHeader>
+                                <div className="py-4 font-normal">
+                                    <LocationForm onSuccess={() => { setIsOpen(false); fetchLocations(); }} />
+                                </div>
+                            </DialogContent>
+                        </Dialog>
+                    </div>
+                </div>
+
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                    <div className="px-6 py-4 bg-slate-50/30 dark:bg-slate-900/10 border-b border-slate-100 dark:border-slate-800/50">
+                        <TabsList className="bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
+                            <TabsTrigger value="centers" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white font-medium">Centros</TabsTrigger>
+                            <TabsTrigger value="ports" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white font-medium">Puertos</TabsTrigger>
+                            <TabsTrigger value="all" className="font-medium">Ver Todos</TabsTrigger>
+                        </TabsList>
+                    </div>
+
+                    <div className="overflow-hidden">
                         <Table>
-                            <TableHeader className="bg-slate-50/50 dark:bg-slate-800/50">
-                                <TableRow className="hover:bg-transparent border-slate-200 dark:border-slate-800">
+                            <TableHeader className="bg-slate-50/50 dark:bg-slate-900/50">
+                                <TableRow className="hover:bg-transparent border-slate-200 dark:border-slate-800/50">
                                     <TableHead onClick={() => handleSort('code')} className="cursor-pointer hover:text-emerald-600 transition-colors py-4 px-6">
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-2 uppercase text-xs font-black tracking-widest text-slate-500 dark:text-slate-400/80">
                                             Código <ArrowUpDown className="h-3 w-3 opacity-50" />
                                         </div>
                                     </TableHead>
                                     <TableHead onClick={() => handleSort('name')} className="cursor-pointer hover:text-emerald-600 transition-colors py-4">
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-2 uppercase text-xs font-black tracking-widest text-slate-500 dark:text-slate-400/80">
                                             Nombre <ArrowUpDown className="h-3 w-3 opacity-50" />
                                         </div>
                                     </TableHead>
                                     <TableHead onClick={() => handleSort('type')} className="cursor-pointer hover:text-emerald-600 transition-colors py-4">
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-2 uppercase text-xs font-black tracking-widest text-slate-500 dark:text-slate-400/80">
                                             Tipo <ArrowUpDown className="h-3 w-3 opacity-50" />
                                         </div>
                                     </TableHead>
-                                    <TableHead className="w-[100px] py-4 text-right pr-6">Acciones</TableHead>
+                                    <TableHead className="w-[100px] py-4 text-right pr-6 uppercase text-xs font-black tracking-widest text-slate-500 dark:text-slate-400/80">Acciones</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>

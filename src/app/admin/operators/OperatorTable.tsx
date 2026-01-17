@@ -20,13 +20,15 @@ import {
     Pencil,
     Trash2,
     Search,
+    Anchor,
     Building2,
-    Ship,
+    Phone,
     Truck,
+    Ship,
     Filter,
     HardHat
 } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import OperatorForm from './OperatorForm';
 
@@ -124,54 +126,67 @@ export default function OperatorTable() {
     };
 
     return (
-        <Card className="border-none shadow-xl bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-            <CardContent className="p-6">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-                    <div className="relative w-full max-w-md group">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-orange-500 transition-colors" />
-                        <Input
-                            placeholder="Buscar operador o tipo..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-10 bg-white/80 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 focus-visible:ring-orange-500/20 focus-visible:border-orange-500 transition-all font-normal"
-                        />
+        <Card className="border-none shadow-xl bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm overflow-hidden">
+            <CardContent className="p-0">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-6 gap-4 border-b border-slate-100 dark:border-slate-800/50">
+                    <div className="flex flex-col gap-0.5">
+                        <h2 className="text-xl font-extrabold tracking-tight flex items-center gap-2.5 text-slate-900 dark:text-white">
+                            <div className="p-1.5 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                                <Anchor className="w-5 h-5 text-orange-600" />
+                            </div>
+                            Gestión de Operadores
+                        </h2>
+                        <p className="text-[11px] text-muted-foreground font-medium pl-10">
+                            Empresas navieras, terrestres y contratistas externos
+                        </p>
                     </div>
 
-                    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-                        <DialogTrigger asChild>
-                            <Button className="bg-orange-600 hover:bg-orange-700 text-white shadow-lg shadow-orange-500/20 transition-all active:scale-95 w-full md:w-auto font-normal">
-                                <Plus className="mr-2 h-4 w-4" /> Nuevo Operador
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-[500px]">
-                            <DialogHeader>
-                                <DialogTitle className="text-xl flex items-center gap-2">
-                                    <Building2 className="w-5 h-5 text-orange-500" />
-                                    Agregar Operador
-                                </DialogTitle>
-                            </DialogHeader>
-                            <div className="py-4 font-normal">
-                                <OperatorForm onSuccess={() => { setIsOpen(false); fetchOperators(); }} />
-                            </div>
-                        </DialogContent>
-                    </Dialog>
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                        <div className="relative w-full sm:w-64 group">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-orange-500 transition-colors" />
+                            <Input
+                                placeholder="Buscar operador..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="pl-10 bg-white/80 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 focus-visible:ring-orange-500/20 focus-visible:border-orange-500 transition-all font-normal"
+                            />
+                        </div>
+                        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+                            <DialogTrigger asChild>
+                                <Button className="bg-orange-600 hover:bg-orange-700 text-white shadow-lg shadow-orange-500/20 transition-all active:scale-95 font-normal">
+                                    <Plus className="mr-2 h-4 w-4" /> Nuevo Operador
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-[500px]">
+                                <DialogHeader>
+                                    <DialogTitle className="text-xl flex items-center gap-2">
+                                        <Anchor className="w-5 h-5 text-orange-500" />
+                                        Registrar Nuevo Operador
+                                    </DialogTitle>
+                                </DialogHeader>
+                                <div className="py-2 font-normal">
+                                    <OperatorForm onSuccess={() => { setIsOpen(false); fetchOperators(); }} />
+                                </div>
+                            </DialogContent>
+                        </Dialog>
+                    </div>
                 </div>
 
-                <div className="rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-white/30 dark:bg-slate-900/30">
+                <div className="overflow-hidden">
                     <Table>
-                        <TableHeader className="bg-slate-50/50 dark:bg-slate-800/50">
-                            <TableRow className="hover:bg-transparent border-slate-200 dark:border-slate-800">
+                        <TableHeader className="bg-slate-50/50 dark:bg-slate-900/50">
+                            <TableRow className="hover:bg-transparent border-slate-200 dark:border-slate-800/50">
                                 <TableHead onClick={() => handleSort('name')} className="cursor-pointer hover:text-orange-600 transition-colors py-4 px-6">
-                                    <div className="flex items-center gap-2 uppercase text-[10px] font-bold tracking-wider text-slate-500">
+                                    <div className="flex items-center gap-2 uppercase text-xs font-black tracking-widest text-slate-500 dark:text-slate-400/80">
                                         Nombre <ArrowUpDown className="h-3 w-3 opacity-50" />
                                     </div>
                                 </TableHead>
                                 <TableHead onClick={() => handleSort('type')} className="cursor-pointer hover:text-orange-600 transition-colors py-4">
-                                    <div className="flex items-center gap-2 uppercase text-[10px] font-bold tracking-wider text-slate-500">
+                                    <div className="flex items-center gap-2 uppercase text-xs font-black tracking-widest text-slate-500 dark:text-slate-400/80">
                                         Tipo <ArrowUpDown className="h-3 w-3 opacity-50" />
                                     </div>
                                 </TableHead>
-                                <TableHead className="w-[100px] py-4 text-right pr-6 uppercase text-[10px] font-bold tracking-wider text-slate-500">Acciones</TableHead>
+                                <TableHead className="w-[100px] py-4 text-right pr-6 uppercase text-xs font-black tracking-widest text-slate-500 dark:text-slate-400/80">Acciones</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>

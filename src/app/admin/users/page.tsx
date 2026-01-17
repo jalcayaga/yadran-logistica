@@ -1,6 +1,7 @@
 import { createClient } from '@/utils/supabase/server';
 import RolesTable from './RolesTable';
 import { AppRole } from '@/utils/roles';
+import { ShieldCheck } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,14 +23,20 @@ export default async function AdminUsersPage() {
     }));
 
     return (
-        <div className="space-y-6">
-            <div>
-                <h1 className="text-2xl font-bold tracking-tight">Gestión de Usuarios</h1>
-                <p className="text-muted-foreground">
-                    Administra los accesos y roles de la plataforma. Solo visible para SysAdmins.
+        <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col gap-1 mb-8">
+                <h1 className="text-3xl font-extrabold tracking-tight flex items-center gap-3 text-slate-900 dark:text-white">
+                    <span className="bg-purple-600 text-white p-2.5 rounded-2xl shadow-xl shadow-purple-500/20">
+                        <ShieldCheck className="w-7 h-7" />
+                    </span>
+                    Control de Accesos
+                </h1>
+                <p className="text-muted-foreground text-sm pl-16">
+                    Gestione los roles y permisos de seguridad para los usuarios de la plataforma.
                 </p>
                 {error && (
-                    <div className="bg-red-50 text-red-600 p-4 rounded-md mt-4">
+                    <div className="bg-red-50 text-red-600 p-4 rounded-xl mt-4 border border-red-100 font-medium text-sm flex items-center gap-2">
+                        <span className="w-2 h-2 bg-red-600 rounded-full animate-pulse" />
                         Error cargando usuarios: {error.message}
                     </div>
                 )}
