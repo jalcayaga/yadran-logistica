@@ -1,0 +1,104 @@
+{
+    "name": "Envío WhatsApp Yadran v2 (Tracking)",
+    "nodes": [
+        {
+            "parameters": {
+                "path": "816f4c91-139e-41d8-958d-48ce9d497136",
+                "responseMode": "lastNode",
+                "options": {}
+            },
+            "name": "Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                460,
+                300
+            ],
+            "webhookId": "816f4c91-139e-41d8-958d-48ce9d497136"
+        },
+        {
+            "parameters": {
+                "fieldToSplitOut": "crew"
+            },
+            "name": "Split Crew",
+            "type": "n8n-nodes-base.itemLists",
+            "typeVersion": 1,
+            "position": [
+                680,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "jsCode": "const crew = $input.item.json;\nconst body = $('Webhook').first().json.body;\nconst itinerary = body.itinerary;\n// Tracking link injected by Next.js backend\nconst trackingLink = body.tracking_link || ''; \n\nconst roleName = crew.role === 'captain' ? 'Capitán' : crew.role === 'substitute' ? 'Patrón' : 'Tripulante';\n\n// Emojis based on role\nconst roleEmoji = crew.role === 'captain' ? '👨‍✈️' : '🧑‍🔧';\n\nlet message = `⚓ *Asignación Logística Yadran* ⚓\n\n` +\n`Hola ${crew.name}, has sido asignado como *${roleName}* ${roleEmoji}.\n\n` +\n`📅 *Fecha:* ${itinerary.date_formatted} ${itinerary.time}\n` +\n`🚢 *Nave:* ${itinerary.vessel_name}\n` +\n`📍 *Ruta:* ${itinerary.route}\n\n`;\n\nif (trackingLink) {\n  message += `🔗 *Sigue tu viaje y estado aquí:*\n${trackingLink}\n\n`;\n}\n\nmessage += `Por favor confirma tu asistencia.`;\n\nreturn {\n  json: {\n    number: '56' + crew.phone.replace(/\\D/g, ''),\n    text: message,\n    delay: 1500,\n    linkPreview: true // Enable preview for the tracking link\n  }\n};"
+            },
+            "name": "Format Message",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 1,
+            "position": [
+                900,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "https://arevoapi.artifact.cl/message/sendText/yadran-produccion",
+                "authentication": "genericCredentialType",
+                "genericAuthType": "headerAuth",
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={{ JSON.stringify({\n  \"number\": $json.number,\n  \"text\": $json.text,\n  \"delay\": 1200,\n  \"linkPreview\": true\n}) }}",
+                "options": {}
+            },
+            "name": "Send WhatsApp",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 1,
+            "position": [
+                1120,
+                300
+            ],
+            "credentials": {
+                "httpHeaderAuth": {
+                    "id": "1",
+                    "name": "Evolution API Key"
+                }
+            }
+        }
+    ],
+    "connections": {
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "Split Crew",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Split Crew": {
+            "main": [
+                [
+                    {
+                        "node": "Format Message",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Format Message": {
+            "main": [
+                [
+                    {
+                        "node": "Send WhatsApp",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

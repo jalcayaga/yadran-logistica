@@ -1,0 +1,215 @@
+{
+    "name": "Envío WhatsApp Yadran v3 (Status + Crew)",
+    "nodes": [
+        {
+            "parameters": {
+                "path": "816f4c91-139e-41d8-958d-48ce9d497136",
+                "responseMode": "lastNode",
+                "options": {}
+            },
+            "name": "Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                280,
+                300
+            ],
+            "webhookId": "816f4c91-139e-41d8-958d-48ce9d497136"
+        },
+        {
+            "parameters": {
+                "dataType": "string",
+                "value1": "={{ $json.body.event }}",
+                "rules": {
+                    "rules": [
+                        {
+                            "value2": "itinerary_status_change",
+                            "output": 0
+                        }
+                    ]
+                },
+                "fallbackOutput": 1
+            },
+            "name": "Event Router",
+            "type": "n8n-nodes-base.switch",
+            "typeVersion": 1,
+            "position": [
+                500,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "fieldToSplitOut": "passengers"
+            },
+            "name": "Split Passengers",
+            "type": "n8n-nodes-base.itemLists",
+            "typeVersion": 1,
+            "position": [
+                740,
+                180
+            ]
+        },
+        {
+            "parameters": {
+                "fieldToSplitOut": "crew"
+            },
+            "name": "Split Crew",
+            "type": "n8n-nodes-base.itemLists",
+            "typeVersion": 1,
+            "position": [
+                740,
+                420
+            ]
+        },
+        {
+            "parameters": {
+                "jsCode": "const p = $input.item.json;\nconst body = $('Webhook').first().json.body;\nconst itinerary = body.itinerary;\nconst trackingLink = body.tracking_link || '';\nconst newStatus = itinerary.new_status;\n\n// Status Emojis & Text\nlet statusText = 'ACTUALIZACIÓN';\nlet statusEmoji = '📢';\nif (newStatus === 'cancelled') {\n  statusText = 'CANCELADO';\n  statusEmoji = '🔴';\n} else if (newStatus === 'suspended') {\n  statusText = 'SUSPENDIDO';\n  statusEmoji = '🟠';\n}\n\nlet message = `⚠️ *AVISO DE VIAJE* ⚠️\n\n` +\n`Hola ${p.name}, informamos que tu viaje programado ha sido *${statusText}* ${statusEmoji}.\n\n` +\n`📅 *Fecha:* ${itinerary.date} ${itinerary.time}\n` +\n`🚢 *Nave:* ${itinerary.vessel_name}\n` +\n`📍 *Ruta:* ${itinerary.route}\n\n`;\n\nif (trackingLink) {\n  message += `🔗 *Ver estado actualizado aquí:*\n${trackingLink}\n\n`;\n}\n\nmessage += `Lamentamos los inconvenientes. Logística Yadran.`;\n\nreturn {\n  json: {\n    number: '56' + p.phone.replace(/\\D/g, ''),\n    text: message,\n    delay: 1500,\n    linkPreview: true\n  }\n};"
+            },
+            "name": "Format Passenger Msg",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 1,
+            "position": [
+                960,
+                180
+            ]
+        },
+        {
+            "parameters": {
+                "jsCode": "const crew = $input.item.json;\nconst body = $('Webhook').first().json.body;\nconst itinerary = body.itinerary;\n// Tracking link injected by Next.js backend\nconst trackingLink = body.tracking_link || ''; \n\nconst roleName = crew.role === 'captain' ? 'Capitán' : crew.role === 'substitute' ? 'Patrón' : 'Tripulante';\n\n// Emojis based on role\nconst roleEmoji = crew.role === 'captain' ? '👨‍✈️' : '🧑‍🔧';\n\nlet message = `⚓ *Asignación Logística Yadran* ⚓\n\n` +\n`Hola ${crew.name}, has sido asignado como *${roleName}* ${roleEmoji}.\n\n` +\n`📅 *Fecha:* ${itinerary.date_formatted} ${itinerary.time}\n` +\n`🚢 *Nave:* ${itinerary.vessel_name}\n` +\n`📍 *Ruta:* ${itinerary.route}\n\n`;\n\nif (trackingLink) {\n  message += `🔗 *Sigue tu viaje y estado aquí:*\n${trackingLink}\n\n`;\n}\n\nmessage += `Por favor confirma tu asistencia.`;\n\nreturn {\n  json: {\n    number: '56' + crew.phone.replace(/\\D/g, ''),\n    text: message,\n    delay: 1500,\n    linkPreview: true\n  }\n};"
+            },
+            "name": "Format Crew Msg",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 1,
+            "position": [
+                960,
+                420
+            ]
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "https://arevoapi.artifact.cl/message/sendText/yadran-produccion",
+                "authentication": "genericCredentialType",
+                "genericAuthType": "headerAuth",
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={{ JSON.stringify({\n  \"number\": $json.number,\n  \"text\": $json.text,\n  \"delay\": 1200,\n  \"linkPreview\": true\n}) }}",
+                "options": {}
+            },
+            "name": "Send WhatsApp Passenger",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 1,
+            "position": [
+                1180,
+                180
+            ],
+            "credentials": {
+                "httpHeaderAuth": {
+                    "id": "1",
+                    "name": "Evolution API Key"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "https://arevoapi.artifact.cl/message/sendText/yadran-produccion",
+                "authentication": "genericCredentialType",
+                "genericAuthType": "headerAuth",
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={{ JSON.stringify({\n  \"number\": $json.number,\n  \"text\": $json.text,\n  \"delay\": 1200,\n  \"linkPreview\": true\n}) }}",
+                "options": {}
+            },
+            "name": "Send WhatsApp Crew",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 1,
+            "position": [
+                1180,
+                420
+            ],
+            "credentials": {
+                "httpHeaderAuth": {
+                    "id": "1",
+                    "name": "Evolution API Key"
+                }
+            }
+        }
+    ],
+    "connections": {
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "Event Router",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Event Router": {
+            "main": [
+                [
+                    {
+                        "node": "Split Passengers",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Split Crew",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Split Passengers": {
+            "main": [
+                [
+                    {
+                        "node": "Format Passenger Msg",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Split Crew": {
+            "main": [
+                [
+                    {
+                        "node": "Format Crew Msg",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Format Passenger Msg": {
+            "main": [
+                [
+                    {
+                        "node": "Send WhatsApp Passenger",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Format Crew Msg": {
+            "main": [
+                [
+                    {
+                        "node": "Send WhatsApp Crew",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

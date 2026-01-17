@@ -1,0 +1,65 @@
+;;
+;; Domain:     artifact.cl.
+;; Exported:   2026-01-12 10:57:58
+;;
+;; This file is intended for use for informational and archival
+;; purposes ONLY and MUST be edited before use on a production
+;; DNS server.  In particular, you must:
+;;   -- update the SOA record with the correct authoritative name server
+;;   -- update the SOA record with the contact e-mail address information
+;;   -- update the NS record(s) with the authoritative name servers for this domain.
+;;
+;; For further information, please consult the BIND documentation
+;; located on the following website:
+;;
+;; http://www.isc.org/
+;;
+;; And RFC 1035:
+;;
+;; http://www.ietf.org/rfc/rfc1035.txt
+;;
+;; Please note that we do NOT offer technical support for any use
+;; of this zone data, the BIND name server, or any other third-party
+;; DNS software.
+;;
+;; Use at your own risk.
+;; SOA Record
+artifact.cl	3600	IN	SOA	jade.ns.cloudflare.com. dns.cloudflare.com. 2051988207 10000 2400 604800 3600
+
+;; NS Records
+artifact.cl.	86400	IN	NS	jade.ns.cloudflare.com.
+artifact.cl.	86400	IN	NS	sonny.ns.cloudflare.com.
+
+;; A Records
+leon.artifact.cl.	1	IN	A	207.180.205.234 ; cf_tags=cf-proxied:false
+
+;; CNAME Records
+archatwoot.artifact.cl.	1	IN	CNAME	leon.artifact.cl. ; cf_tags=cf-proxied:false
+arevoapi.artifact.cl.	1	IN	CNAME	leon.artifact.cl. ; cf_tags=cf-proxied:false
+arflowise.artifact.cl.	1	IN	CNAME	leon.artifact.cl. ; cf_tags=cf-proxied:false
+arminioback.artifact.cl.	1	IN	CNAME	leon.artifact.cl. ; cf_tags=cf-proxied:false
+arminiofront.artifact.cl.	1	IN	CNAME	leon.artifact.cl. ; cf_tags=cf-proxied:false
+arn8n.artifact.cl.	1	IN	CNAME	leon.artifact.cl. ; cf_tags=cf-proxied:false
+arportainer.artifact.cl.	1	IN	CNAME	leon.artifact.cl. ; cf_tags=cf-proxied:false
+arsupabase.artifact.cl.	1	IN	CNAME	leon.artifact.cl. ; cf_tags=cf-proxied:false
+artifact.cl.	1	IN	CNAME	cname.vercel-dns.com. ; cf_tags=cf-proxied:false
+arwebhook.artifact.cl.	1	IN	CNAME	leon.artifact.cl. ; cf_tags=cf-proxied:false
+hydra.artifact.cl.	600	IN	CNAME	d77ae5ed35416b1a.vercel-dns-017.com. ; cf_tags=cf-proxied:false
+netsea.artifact.cl.	600	IN	CNAME	a92497f4fea51f7d.vercel-dns-017.com. ; cf_tags=cf-proxied:false
+www.artifact.cl.	600	IN	CNAME	9b13ac7a5005e590.vercel-dns-017.com. ; cf_tags=cf-proxied:false
+yadran-logistica.artifact.cl.	600	IN	CNAME	6ff366bbee31be98.vercel-dns-017.com. ; cf_tags=cf-proxied:false
+zb63966770.artifact.cl.	600	IN	CNAME	zmverify.zoho.com. ; cf_tags=cf-proxied:false
+
+;; MX Records
+artifact.cl.	600	IN	MX	50 mx3.zoho.com.
+artifact.cl.	600	IN	MX	10 mx.zoho.com.
+artifact.cl.	600	IN	MX	20 mx2.zoho.com.
+
+;; TXT Records
+artifact.cl.	3600	IN	TXT	"v=spf1 include:zohomail.com -all"
+_vercel.artifact.cl.	600	IN	TXT	"vc-domain-verify=hydra.artifact.cl,314017d283a29eb98e34,dc"
+_vercel.artifact.cl.	600	IN	TXT	"vc-domain-verify=yadran-logistica.artifact.cl,c504da155b9efa00a0db,dc"
+_vercel.artifact.cl.	600	IN	TXT	"vc-domain-verify=netsea.artifact.cl,f0d9663c1d2f9cd27e2a,dc"
+_vercel.artifact.cl.	600	IN	TXT	"vc-domain-verify=artifact.cl,9337811d0dbed0a64811,dc"
+_vercel.artifact.cl.	600	IN	TXT	"vc-domain-verify=www.artifact.cl,62b6d925dd026f24312b,dc"
+zmail._domainkey.artifact.cl.	600	IN	TXT	"v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCjq9lvf4HqqSyhB7cjFMf2C3xqugHUWNKZEvVoFdoyl+pS3TeIP6NXwsAycleZFYi3TeMvq1hrhkjorUNATxIOBap+413vJbBLS0i9RdQ3Qo+3YaVucWES4nJVj2Vt4vWsN1pTRbkeGK8HdGN/dNnQBITwWmMWTm15+QfhJ7CQEwIDAQAB"
