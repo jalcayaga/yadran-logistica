@@ -338,6 +338,12 @@ export default function ItineraryTable() {
 
             <Dialog open={!!viewingManifest} onOpenChange={(open) => !open && setViewingManifest(null)}>
                 <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle>Vista Previa de Manifiesto</DialogTitle>
+                        <DialogDescription>
+                            Detalle de tripulación y pasajeros para el zarpe seleccionado.
+                        </DialogDescription>
+                    </DialogHeader>
                     {viewingManifest && viewingManifest.id && <ManifestPreview itineraryId={viewingManifest.id} />}
                 </DialogContent>
             </Dialog>

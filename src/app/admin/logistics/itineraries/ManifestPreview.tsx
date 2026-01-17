@@ -28,7 +28,12 @@ export default function ManifestPreview({ itineraryId }: ManifestPreviewProps) {
                     *,
                     vessel:vessels(*),
                     crew:crew_assignments(*, person:people(*)),
-                    bookings:bookings(*, person:people(*), origin:itinerary_stops(*, location:locations(*)), destination:itinerary_stops(*, location:locations(*)))
+                    bookings:bookings(
+                        *, 
+                        person:people(*), 
+                        origin:itinerary_stops!bookings_origin_stop_id_fkey(*, location:locations(*)), 
+                        destination:itinerary_stops!bookings_destination_stop_id_fkey(*, location:locations(*))
+                    )
                 `)
                 .eq('id', itineraryId)
                 .single();

@@ -168,7 +168,7 @@
                 "conditions": {
                     "boolean": [
                         {
-                            "value1": "={{ $json.isCaptain && !!$json.manifestUrl }}",
+                            "value1": "={{ $('Format Crew Msg').item.json.isCaptain && !!$('Format Crew Msg').item.json.manifestUrl }}",
                             "value2": true
                         }
                     ]
@@ -190,7 +190,7 @@
                 "genericAuthType": "headerAuth",
                 "sendBody": true,
                 "specifyBody": "json",
-                "jsonBody": "={{ JSON.stringify({\n  \"number\": $json.number,\n  \"mediaMessage\": {\n    \"mediatype\": \"document\",\n    \"fileName\": \"Manifiesto_Zarpe.pdf\",\n    \"caption\": \"📄 Adjunto Manifiesto de Zarpe\",\n    \"media\": $json.manifestUrl\n  },\n  \"delay\": 2000\n}) }}",
+                "jsonBody": "={{ JSON.stringify({\n  \"number\": $('Format Crew Msg').item.json.number,\n  \"mediaMessage\": {\n    \"mediatype\": \"document\",\n    \"fileName\": \"Manifiesto_Zarpe.pdf\",\n    \"caption\": \"📄 Adjunto Manifiesto de Zarpe\",\n    \"media\": $('Format Crew Msg').item.json.manifestUrl\n  },\n  \"delay\": 2000\n}) }}",
                 "options": {}
             },
             "name": "Send Manifest PDF",

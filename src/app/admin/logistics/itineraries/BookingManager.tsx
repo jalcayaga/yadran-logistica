@@ -55,7 +55,7 @@ interface BulkRow {
     error?: string;
 }
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 export default function BookingManager({ itinerary }: BookingManagerProps) {
     const [bookings, setBookings] = useState<Booking[]>([]);
@@ -404,6 +404,9 @@ export default function BookingManager({ itinerary }: BookingManagerProps) {
                 <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle>Carga Masiva de Pasajeros (CSV)</DialogTitle>
+                        <DialogDescription>
+                            Suba un archivo CSV con las columnas RUT, ORIGEN y DESTINO para procesar múltiples reservas.
+                        </DialogDescription>
                     </DialogHeader>
 
                     <div className="space-y-4">
@@ -477,6 +480,9 @@ export default function BookingManager({ itinerary }: BookingManagerProps) {
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>{editingBookingId ? 'Editar Reserva' : 'Nueva Reserva'}</DialogTitle>
+                        <DialogDescription>
+                            {editingBookingId ? 'Modifique los detalles de la reserva existente.' : 'Cree una nueva reserva para este itinerario.'}
+                        </DialogDescription>
                     </DialogHeader>
 
                     <div className="space-y-4 py-4">
