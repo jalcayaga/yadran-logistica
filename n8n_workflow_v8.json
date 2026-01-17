@@ -1,0 +1,338 @@
+{
+    "name": "Envío WhatsApp Yadran v8 (Community Nodes Fix)",
+    "nodes": [
+        {
+            "parameters": {
+                "resource": "messages-api",
+                "instanceName": "logistica",
+                "remoteJid": "={{ $json.number }}",
+                "messageText": "={{ $json.text }}",
+                "options_message": {}
+            },
+            "type": "n8n-nodes-evolution-api.evolutionApi",
+            "typeVersion": 1,
+            "position": [
+                2496,
+                2288
+            ],
+            "id": "3606c1bc-7f58-4dfa-b9a6-183523e37ddf",
+            "name": "Send WhatsApp Passenger",
+            "credentials": {
+                "evolutionApi": {
+                    "id": "91q91tNOsLizvu3Z",
+                    "name": "Evolution account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "resource": "messages-api",
+                "instanceName": "logistica",
+                "remoteJid": "={{ $json.number }}",
+                "messageText": "={{ $json.text }}",
+                "options_message": {}
+            },
+            "type": "n8n-nodes-evolution-api.evolutionApi",
+            "typeVersion": 1,
+            "position": [
+                2496,
+                2480
+            ],
+            "id": "5ef8abfe-c3eb-4a57-8bd9-ccd3bc181416",
+            "name": "Send WhatsApp Crew",
+            "credentials": {
+                "evolutionApi": {
+                    "id": "91q91tNOsLizvu3Z",
+                    "name": "Evolution account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "resource": "media-api",
+                "instanceName": "logistica",
+                "remoteJid": "={{ $('Format Crew Msg').item.json.number }}",
+                "media": "={{ $('Format Crew Msg').item.json.manifestUrl }}",
+                "mediaType": "document",
+                "fileName": "Manifiesto_Zarpe.pdf",
+                "caption": "📄 Adjunto Manifiesto de Zarpe",
+                "options_media": {}
+            },
+            "type": "n8n-nodes-evolution-api.evolutionApi",
+            "typeVersion": 1,
+            "position": [
+                2944,
+                2480
+            ],
+            "id": "def71785-f2b2-465e-ad75-aa335562e2b7",
+            "name": "Send Manifest PDF",
+            "credentials": {
+                "evolutionApi": {
+                    "id": "91q91tNOsLizvu3Z",
+                    "name": "Evolution account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "816f4c91-139e-41d8-958d-48ce9d497136",
+                "options": {}
+            },
+            "name": "Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                1376,
+                2384
+            ],
+            "webhookId": "816f4c91-139e-41d8-958d-48ce9d497136",
+            "id": "1d23403b-5c92-4acf-9985-7b17365ac91c"
+        },
+        {
+            "parameters": {
+                "dataType": "string",
+                "value1": "={{ $json.event === 'manual_send' ? $json.target : ($json.event === 'itinerary_status_change' ? 'all' : 'passengers') }}",
+                "rules": {
+                    "rules": [
+                        {
+                            "value2": "passengers"
+                        },
+                        {
+                            "value2": "crew",
+                            "output": 1
+                        },
+                        {
+                            "value2": "all",
+                            "output": 2
+                        }
+                    ]
+                },
+                "fallbackOutput": 0
+            },
+            "name": "Event Router",
+            "type": "n8n-nodes-base.switch",
+            "typeVersion": 1,
+            "position": [
+                1824,
+                2352
+            ],
+            "id": "092710ab-7be7-4f31-9dbd-5c5c140c8080"
+        },
+        {
+            "parameters": {
+                "fieldToSplitOut": "passengers",
+                "options": {}
+            },
+            "name": "Split Passengers",
+            "type": "n8n-nodes-base.itemLists",
+            "typeVersion": 1,
+            "position": [
+                2048,
+                2288
+            ],
+            "id": "e7b646da-358a-4f4c-815e-cab7df57eae5"
+        },
+        {
+            "parameters": {
+                "fieldToSplitOut": "crew",
+                "options": {}
+            },
+            "name": "Split Crew",
+            "type": "n8n-nodes-base.itemLists",
+            "typeVersion": 1,
+            "position": [
+                2048,
+                2480
+            ],
+            "id": "98b35092-b78b-40de-a68c-43065f5d132d"
+        },
+        {
+            "parameters": {
+                "jsCode": "const p = $input.item.json;\nconst root = $('Extract Body1').first().json;\nconst itinerary = root.itinerary || {};\nconst trackingLink = root.tracking_link || '';\nconst newStatus = itinerary.new_status;\nconst tripTime = itinerary.start_time || itinerary.time || '08:00';\nconst tripDate = itinerary.date_formatted || itinerary.date || '';\n\nlet title = '🛳️ CONFIRMACIÓN DE VIAJE';\nlet footerText = 'Por favor llegar o estar listo 15 min antes.';\n\nif (newStatus === 'cancelled') {\n  title = '⚠️ AVISO DE CANCELACIÓN ⚠️';\n  footerText = 'Lamentamos los inconvenientes.';\n} else if (newStatus === 'suspended') {\n  title = '⚠️ AVISO DE SUSPENSIÓN ⚠️';\n  footerText = 'Lamentamos los inconvenientes.';\n}\n\nlet message = `*${title}*\\n\\n` +\n`Hola ${p.name}, recordamos tu viaje con Logística Yadran.\\n\\n` +\n`📅 *Fecha:* ${tripDate} ${tripTime}\\n` +\n`🚢 *Nave:* ${itinerary.vessel_name || 'Nave'}\\n` +\n`📍 *Ruta:* ${itinerary.route || 'Yadran'}\\n\\n`;\n\nif (trackingLink) {\n  message += `🔗 *Sigue el estado de tu viaje aquí:*\\n${trackingLink}\\n\\n`;\n}\n\nmessage += `⚠️ *Mensaje automático: No respondas a este chat.*\\n\\n${footerText} ¡Buen viaje!`;\n\nconst cleanPhone = (p.phone || '').replace(/\\D/g, '');\nconst finalNumber = cleanPhone.startsWith('56') ? cleanPhone : '56' + cleanPhone;\n\nreturn {\n  json: {\n    number: finalNumber,\n    text: message,\n    delay: 1500,\n    linkPreview: true\n  }\n};"
+            },
+            "name": "Format Passenger Msg",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 1,
+            "position": [
+                2272,
+                2288
+            ],
+            "id": "7e62a9ed-6704-48b4-b533-9805c7d196c3"
+        },
+        {
+            "parameters": {
+                "jsCode": "const crew = $input.item.json;\nconst root = $('Extract Body1').first().json;\nconst itinerary = root.itinerary || {};\nconst tripTime = itinerary.start_time || itinerary.time || '08:00';\nconst tripDate = itinerary.date_formatted || itinerary.date || '';\n\nconst roleName = crew.role === 'captain' ? 'Capitán' : crew.role === 'substitute' ? 'Patrón' : 'Tripulante';\nconst roleEmoji = crew.role === 'captain' ? '👨‍✈️' : '🧑‍🔧';\n\nlet message = `⚓ *Asignación Logística Yadran* ⚓\\n\\n` +\n`Hola ${crew.name}, has sido asignado como *${roleName}* ${roleEmoji}.\\n\\n` +\n`📅 *Fecha:* ${tripDate} ${tripTime}\\n` +\n`🚢 *Nave:* ${itinerary.vessel_name || 'Nave'}\\n` +\n`📍 *Ruta:* ${itinerary.route || 'Yadran'}\\n\\n`;\n\nif (crew.confirmation_link) {\n  message += `✅ *Por favor confirma tu asistencia aquí:*\\n${crew.confirmation_link}\\n\\n`;\n}\n\nmessage += `⚠️ *Mensaje automático: No respondas a este chat.*\\n\\nPor favor confirma tu asistencia pulsando el link arriba.`;\n\nconst cleanPhone = (crew.phone || '').replace(/\\D/g, '');\nconst finalNumber = cleanPhone.startsWith('56') ? cleanPhone : '56' + cleanPhone;\n\nreturn {\n  json: {\n    number: finalNumber,\n    text: message,\n    delay: 1500,\n    linkPreview: true,\n    isCaptain: (crew.role === 'captain' || crew.role === 'substitute'),\n    manifestUrl: root.manifest_pdf\n  }\n};"
+            },
+            "name": "Format Crew Msg",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 1,
+            "position": [
+                2272,
+                2480
+            ],
+            "id": "6b0276e4-af3c-4fcc-bbe4-bde5ae26f21a"
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "boolean": [
+                        {
+                            "value1": "={{ $('Format Crew Msg').item.json.isCaptain && !!$('Format Crew Msg').item.json.manifestUrl }}",
+                            "value2": true
+                        }
+                    ]
+                }
+            },
+            "name": "Is Captain & Has PDF?",
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 1,
+            "position": [
+                2720,
+                2480
+            ],
+            "id": "e10eee17-7051-4d6a-a76a-06bbf1a341aa"
+        },
+        {
+            "parameters": {
+                "jsCode": "// Simplificar el objeto: sacar todo lo que viene en 'body'\nreturn $input.item.json.body || $input.item.json;"
+            },
+            "name": "Extract Body1",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 1,
+            "position": [
+                1600,
+                2384
+            ],
+            "id": "78d60841-fa68-4ad3-a57b-5f6d5bf6c700"
+        }
+    ],
+    "pinData": {},
+    "connections": {
+        "Send WhatsApp Crew": {
+            "main": [
+                [
+                    {
+                        "node": "Is Captain & Has PDF?",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "Extract Body1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Event Router": {
+            "main": [
+                [
+                    {
+                        "node": "Split Passengers",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Split Crew",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Split Passengers",
+                        "type": "main",
+                        "index": 0
+                    },
+                    {
+                        "node": "Split Crew",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Split Passengers": {
+            "main": [
+                [
+                    {
+                        "node": "Format Passenger Msg",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Split Crew": {
+            "main": [
+                [
+                    {
+                        "node": "Format Crew Msg",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Format Passenger Msg": {
+            "main": [
+                [
+                    {
+                        "node": "Send WhatsApp Passenger",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Format Crew Msg": {
+            "main": [
+                [
+                    {
+                        "node": "Send WhatsApp Crew",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Is Captain & Has PDF?": {
+            "main": [
+                [
+                    {
+                        "node": "Send Manifest PDF",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Extract Body1": {
+            "main": [
+                [
+                    {
+                        "node": "Event Router",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "active": true,
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "meta": {
+        "templateCredsSetupCompleted": true
+    }
+}
