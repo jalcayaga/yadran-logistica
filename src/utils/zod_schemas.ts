@@ -49,6 +49,7 @@ export const vesselSchema = z.object({
     name: z.string().min(2, 'Name is required'),
     type: VesselTypeEnum,
     capacity: z.coerce.number().int().nonnegative().default(0),
+    registration_number: z.string().nullable().optional(),
     active: z.boolean().default(true),
 });
 

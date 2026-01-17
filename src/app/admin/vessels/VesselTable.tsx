@@ -128,6 +128,7 @@ export default function VesselTable() {
                                 Tipo <ArrowUpDown className="inline ml-1 h-3 w-3" />
                             </TableHead>
                             <TableHead className="w-[100px]">Capacidad</TableHead>
+                            <TableHead className="w-[150px]">Matrícula</TableHead>
                             <TableHead className="w-[100px]">Acciones</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -148,6 +149,7 @@ export default function VesselTable() {
                                     <TableCell className="font-medium">{vessel.name}</TableCell>
                                     <TableCell><span className="capitalize">{vessel.type}</span></TableCell>
                                     <TableCell>{vessel.capacity || 0} pax</TableCell>
+                                    <TableCell className="font-mono text-sm">{vessel.registration_number || '---'}</TableCell>
                                     <TableCell>
                                         <div className="flex gap-1">
                                             <Button variant="ghost" size="sm" onClick={() => setEditingVessel(vessel)}><Pencil className="h-4 w-4" /></Button>

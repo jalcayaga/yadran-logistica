@@ -22,7 +22,7 @@ export function getCaptainManifestLink(
 
     let message = `*Manifiesto de Zarpe - Logística Yadran*\n\n`;
     message += `📅 Fecha: ${date} ${time}\n`;
-    message += `🚢 Nave: ${vesselName}\n\n`;
+    message += `🚢 Nave: ${vesselName} (Mat: ${itinerary.vessel?.registration_number || '---'})\n\n`;
 
     message += `*Tripulación:*\n`;
     crew.forEach(c => {
@@ -37,6 +37,9 @@ export function getCaptainManifestLink(
         const dest = p.destination?.location?.name || 'Destino';
         message += `${idx + 1}. ${name} -> ${dest}\n`;
     });
+
+    message += `\n*TOTAL ALMAS A BORDO: ${passengers.length + crew.length}*\n`;
+    message += `(Trip: ${crew.length}, Pasajeros: ${passengers.length})`;
 
     return getWhatsAppLink(captainPhone, message);
 }

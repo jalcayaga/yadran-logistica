@@ -115,6 +115,12 @@ export default function VesselForm({ onSuccess, initialData }: VesselFormProps) 
                     <Input id="name" placeholder="Lancha 1, Barcaza X..." {...register('name')} />
                     {errors.name && <p className="text-red-500 text-xs">{errors.name.message}</p>}
                 </div>
+
+                <div className="space-y-2">
+                    <Label htmlFor="registration_number">Matrícula</Label>
+                    <Input id="registration_number" placeholder="ABC-123..." {...register('registration_number')} />
+                    {errors.registration_number && <p className="text-red-500 text-xs">{errors.registration_number.message}</p>}
+                </div>
             </div>
 
 

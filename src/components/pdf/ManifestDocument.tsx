@@ -89,13 +89,14 @@ const styles = StyleSheet.create({
 
 interface ManifestProps {
     vesselName: string;
+    vesselRegistration?: string;
     itineraryDate: string;
     startTime: string;
     passengers: any[];
     crew: any[];
 }
 
-export const ManifestDocument = ({ vesselName, itineraryDate, startTime, passengers, crew = [] }: ManifestProps) => {
+export const ManifestDocument = ({ vesselName, vesselRegistration, itineraryDate, startTime, passengers, crew = [] }: ManifestProps) => {
     // Group crew by role
     const captain = crew.find((c: any) => c.role === 'captain');
     const substitute = crew.find((c: any) => c.role === 'substitute');
@@ -113,6 +114,8 @@ export const ManifestDocument = ({ vesselName, itineraryDate, startTime, passeng
                     <View style={styles.infoCol}>
                         <Text style={styles.label}>Nave:</Text>
                         <Text style={styles.value}>{vesselName}</Text>
+                        <Text style={styles.label}>Matrícula:</Text>
+                        <Text style={styles.value}>{vesselRegistration || '---'}</Text>
                         <Text style={styles.label}>Capitán:</Text>
                         <Text style={styles.value}>{captain?.person ? `${captain.person.first_name} ${captain.person.last_name}` : '_______________________'}</Text>
                     </View>
