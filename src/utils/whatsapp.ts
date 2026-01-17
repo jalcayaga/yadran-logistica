@@ -34,7 +34,8 @@ export function getCaptainManifestLink(
     message += `\n*Pasajeros:*\n`;
     passengers.forEach((p, idx) => {
         const name = p.person ? `${p.person.first_name} ${p.person.last_name}` : 'Pasajero';
-        message += `${idx + 1}. ${name}\n`;
+        const dest = p.destination?.location?.name || 'Destino';
+        message += `${idx + 1}. ${name} -> ${dest}\n`;
     });
 
     return getWhatsAppLink(captainPhone, message);

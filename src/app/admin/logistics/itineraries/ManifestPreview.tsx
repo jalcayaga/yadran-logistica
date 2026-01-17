@@ -143,6 +143,8 @@ export default function ManifestPreview({ itineraryId }: ManifestPreviewProps) {
                             <TableHead className="w-12 text-center border">#</TableHead>
                             <TableHead className="border">Nombre Completo</TableHead>
                             <TableHead className="border">RUT</TableHead>
+                            <TableHead className="border">Origen</TableHead>
+                            <TableHead className="border">Destino</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -156,6 +158,8 @@ export default function ManifestPreview({ itineraryId }: ManifestPreviewProps) {
                                     <TableCell className="text-center font-medium border text-gray-500">{idx + 1}</TableCell>
                                     <TableCell className="font-semibold border">{p.person ? `${p.person.first_name} ${p.person.last_name}` : ''}</TableCell>
                                     <TableCell className="border">{p.person?.rut_display}</TableCell>
+                                    <TableCell className="border">{p.origin?.location?.name}</TableCell>
+                                    <TableCell className="border">{p.destination?.location?.name}</TableCell>
                                 </TableRow>
                             ))
                         )}
