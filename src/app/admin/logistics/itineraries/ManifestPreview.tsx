@@ -90,8 +90,8 @@ export default function ManifestPreview({ itineraryId }: ManifestPreviewProps) {
     if (loading) return <div>Cargando manifiesto...</div>;
     if (!data) return <div>No se pudo cargar el manifiesto.</div>;
 
-    // Filter confirmed bookings
-    const passengers = data.bookings?.filter((b: any) => b.status === 'confirmed') || [];
+    // Filter non-cancelled bookings
+    const passengers = data.bookings?.filter((b: any) => b.status !== 'cancelled') || [];
 
     // Group crew by role
     const captain = data.crew?.find((c: any) => c.role === 'captain');
@@ -124,6 +124,9 @@ export default function ManifestPreview({ itineraryId }: ManifestPreviewProps) {
                 <div>
                     <h3 className="font-bold text-gray-500 uppercase text-sm mb-1">Nave</h3>
                     <p className="text-xl font-semibold">{data.vessel?.name}</p>
+                    {data.vessel?.registration_number && (
+                        <p className="text-sm font-mono text-blue-600 font-bold mb-1">Matrícula: {data.vessel.registration_number}</p>
+                    )}
                     <p className="text-sm text-gray-600">Capacidad: {data.vessel?.capacity} pax</p>
                 </div>
                 <div>
@@ -183,6 +186,8 @@ export default function ManifestPreview({ itineraryId }: ManifestPreviewProps) {
                             <TableHead className="w-12 text-center border">#</TableHead>
                             <TableHead className="border">Nombre Completo</TableHead>
                             <TableHead className="border">RUT</TableHead>
+                            <TableHead className="border">Empresa</TableHead>
+                            <TableHead className="border">Cargo</TableHead>
                             <TableHead className="border">Origen</TableHead>
                             <TableHead className="border">Destino</TableHead>
                         </TableRow>
@@ -196,10 +201,12 @@ export default function ManifestPreview({ itineraryId }: ManifestPreviewProps) {
                             passengers.map((p: any, idx: number) => (
                                 <TableRow key={p.id}>
                                     <TableCell className="text-center font-medium border text-gray-500">{idx + 1}</TableCell>
-                                    <TableCell className="font-semibold border">{p.person ? `${p.person.first_name} ${p.person.last_name}` : ''}</TableCell>
-                                    <TableCell className="border">{p.person?.rut_display}</TableCell>
-                                    <TableCell className="border">{p.origin?.location?.name}</TableCell>
-                                    <TableCell className="border">{p.destination?.location?.name}</TableCell>
+                                    <TableCell className="font-semibold border">{(p.person || p.passenger) ? `${(p.person || p.passenger).first_name} ${(p.person || p.passenger).last_name}` : ''}</TableCell>
+                                    <TableCell className="border">{(p.person || p.passenger)?.rut_display}</TableCell>
+                                    <TableCell className="border">{(p.person || p.passenger)?.company || '---'}</TableCell>
+                                    <TableCell className="border">{(p.person || p.passenger)?.job_title || '---'}</TableCell>
+                                    <TableCell className="border">{p.origin?.location?.name || p.origin_stop?.location?.name}</TableCell>
+                                    <TableCell className="border">{p.destination?.location?.name || p.destination_stop?.location?.name}</TableCell>
                                 </TableRow>
                             ))
                         )}
