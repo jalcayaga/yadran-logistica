@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { formatDate, formatRut } from "@/utils/formatters";
 import { cn } from "@/lib/utils";
 import Papa from 'papaparse';
+import { createClient } from '@/utils/supabase/client';
 import {
     Command,
     CommandEmpty,
@@ -58,8 +59,10 @@ interface BulkRow {
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 export default function BookingManager({ itinerary }: BookingManagerProps) {
+    const supabase = createClient();
     const [bookings, setBookings] = useState<Booking[]>([]);
     const [people, setPeople] = useState<Person[]>([]);
+    const [crew, setCrew] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -254,9 +257,18 @@ export default function BookingManager({ itinerary }: BookingManagerProps) {
         }
     };
 
+    const fetchCrew = async () => {
+        const { data, error } = await supabase
+            .from('crew_assignments')
+            .select('*, person:people(*)')
+            .eq('itinerary_id', itinerary.id);
+        if (!error) setCrew(data || []);
+    };
+
     useEffect(() => {
         fetchBookings();
         fetchPeople();
+        fetchCrew();
     }, [itinerary.id]);
 
     const handleSaveBooking = async () => {
@@ -374,6 +386,7 @@ export default function BookingManager({ itinerary }: BookingManagerProps) {
                                         itineraryDate={formatDate(itinerary.date)}
                                         startTime={itinerary.start_time}
                                         passengers={bookings}
+                                        crew={crew}
                                     />
                                 ).toBlob();
 

@@ -121,6 +121,7 @@ export default function ItineraryTable() {
                     itineraryDate={formatDate(itinerary.date)}
                     startTime={itinerary.start_time}
                     passengers={bookingsList}
+                    crew={crewList}
                 />
             ).toBlob();
 
