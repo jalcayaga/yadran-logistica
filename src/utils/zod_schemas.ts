@@ -76,7 +76,7 @@ export const routeSchema = z.object({
 export const itineraryStopSchema = z.object({
     id: uuidSchema.optional(),
     itinerary_id: uuidSchema.optional(),
-    location_id: uuidSchema,
+    location_id: z.string().min(1, "Seleccionar ubicación"),
     stop_order: z.number().int().nonnegative(),
     arrival_time: z.string().optional(), // HH:MM:SS
     departure_time: z.string().optional(), // HH:MM:SS
