@@ -42,7 +42,7 @@ export default async function AdminUsersPage() {
                 )}
             </div>
 
-            <RolesTable initialUsers={formattedUsers} />
+            <RolesTable initialUsers={formattedUsers} hideHeader={true} />
         </div>
     );
 }

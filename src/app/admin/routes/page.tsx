@@ -15,7 +15,7 @@ export default function AdminRoutesPage() {
                     Configure tramos frecuentes y combinaciones origen-destino predeterminadas.
                 </p>
             </div>
-            <RouteTable />
+            <RouteTable hideHeader={true} />
         </div>
     );
 }

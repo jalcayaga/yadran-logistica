@@ -31,7 +31,7 @@ import VesselForm from './VesselForm';
 
 type SortKey = 'name' | 'registration_number' | 'type' | 'capacity';
 
-export default function VesselTable() {
+export default function VesselTable({ hideHeader = false }: { hideHeader?: boolean }) {
     const [vessels, setVessels] = useState<Vessel[]>([]);
     const [filteredVessels, setFilteredVessels] = useState<Vessel[]>([]);
     const [loading, setLoading] = useState(true);
@@ -116,20 +116,22 @@ export default function VesselTable() {
     return (
         <Card className="border-none shadow-xl bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm overflow-hidden">
             <CardContent className="p-0">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-6 gap-4 border-b border-slate-100 dark:border-slate-800/50">
-                    <div className="flex flex-col gap-0.5">
-                        <h2 className="text-xl font-extrabold tracking-tight flex items-center gap-2.5 text-slate-900 dark:text-white">
-                            <div className="p-1.5 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                                <Ship className="w-5 h-5 text-blue-600" />
-                            </div>
-                            Listado de Flota
-                        </h2>
-                        <p className="text-[11px] text-muted-foreground font-medium pl-10">
-                            Registro oficial de naves y sus capacidades
-                        </p>
-                    </div>
+                <div className={`flex flex-col sm:flex-row ${hideHeader ? 'justify-end' : 'justify-between'} items-start sm:items-center p-6 gap-4 border-b border-slate-100 dark:border-slate-800/50`}>
+                    {!hideHeader && (
+                        <div className="flex flex-col gap-0.5">
+                            <h2 className="text-xl font-extrabold tracking-tight flex items-center gap-2.5 text-slate-900 dark:text-white">
+                                <div className="p-1.5 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                                    <Ship className="w-5 h-5 text-blue-600" />
+                                </div>
+                                Listado de Flota
+                            </h2>
+                            <p className="text-[11px] text-muted-foreground font-medium pl-10">
+                                Registro oficial de naves y sus capacidades
+                            </p>
+                        </div>
+                    )}
 
-                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                    <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
                         <div className="relative w-full sm:w-64 group">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-blue-500 transition-colors" />
                             <Input
@@ -141,7 +143,7 @@ export default function VesselTable() {
                         </div>
                         <Dialog open={isOpen} onOpenChange={setIsOpen}>
                             <DialogTrigger asChild>
-                                <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20 transition-all active:scale-95 font-normal">
+                                <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20 transition-all active:scale-95 font-normal w-full sm:w-auto">
                                     <Plus className="mr-2 h-4 w-4" /> Nueva Nave
                                 </Button>
                             </DialogTrigger>

@@ -42,7 +42,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 
-export default function CrewTable() {
+export default function CrewTable({ hideHeader = false }: { hideHeader?: boolean }) {
     const supabase = createClient();
     const [people, setPeople] = useState<Person[]>([]);
     const [filteredPeople, setFilteredPeople] = useState<Person[]>([]);
@@ -291,20 +291,22 @@ export default function CrewTable() {
     return (
         <Card className="border-none shadow-xl bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm overflow-hidden">
             <CardContent className="p-0">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-6 gap-4 border-b border-slate-100 dark:border-slate-800/50">
-                    <div className="flex flex-col gap-0.5">
-                        <h2 className="text-xl font-extrabold tracking-tight flex items-center gap-2.5 text-slate-900 dark:text-white">
-                            <div className="p-1.5 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-                                <ShipWheel className="w-5 h-5 text-orange-600" />
-                            </div>
-                            Personal de Flota
-                        </h2>
-                        <p className="text-[11px] text-muted-foreground font-medium pl-10">
-                            Capitanes y tripulación habilitada para zarpes
-                        </p>
-                    </div>
+                <div className={`flex flex-col sm:flex-row ${hideHeader ? 'justify-end' : 'justify-between'} items-start sm:items-center p-6 gap-4 border-b border-slate-100 dark:border-slate-800/50`}>
+                    {!hideHeader && (
+                        <div className="flex flex-col gap-0.5">
+                            <h2 className="text-xl font-extrabold tracking-tight flex items-center gap-2.5 text-slate-900 dark:text-white">
+                                <div className="p-1.5 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                                    <ShipWheel className="w-5 h-5 text-orange-600" />
+                                </div>
+                                Personal de Flota
+                            </h2>
+                            <p className="text-[11px] text-muted-foreground font-medium pl-10">
+                                Capitanes y tripulación habilitada para zarpes
+                            </p>
+                        </div>
+                    )}
 
-                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                    <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
                         <div className="relative w-full sm:w-64 group">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-orange-500 transition-colors" />
                             <Input
@@ -314,11 +316,11 @@ export default function CrewTable() {
                                 className="pl-10 bg-white/80 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 focus-visible:ring-orange-500/20 focus-visible:border-orange-500 transition-all font-normal"
                             />
                         </div>
-                        <div className="flex gap-2">
-                            <Button variant="outline" onClick={() => setIsPromoteOpen(true)} className="border-orange-200 text-orange-700 hover:bg-orange-50 dark:border-orange-900 dark:text-orange-400 font-normal">
+                        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                            <Button variant="outline" onClick={() => setIsPromoteOpen(true)} className="border-orange-200 text-orange-700 hover:bg-orange-50 dark:border-orange-900 dark:text-orange-400 font-normal w-full sm:w-auto">
                                 <UserPlus className="w-4 h-4 mr-2" /> Buscar Existente
                             </Button>
-                            <Button onClick={() => { setEditingPerson(null); setIsOpen(true); }} className="bg-orange-600 hover:bg-orange-700 text-white shadow-lg shadow-orange-500/20 active:scale-95 transition-all font-normal">
+                            <Button onClick={() => { setEditingPerson(null); setIsOpen(true); }} className="bg-orange-600 hover:bg-orange-700 text-white shadow-lg shadow-orange-500/20 active:scale-95 transition-all font-normal w-full sm:w-auto">
                                 <Plus className="mr-2 h-4 w-4" /> Nuevo
                             </Button>
                         </div>

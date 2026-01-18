@@ -15,7 +15,7 @@ export default function AdminCrewPage() {
                     Administre exclusivamente Capitanes, Patrones y Tripulantes autorizados.
                 </p>
             </div>
-            <CrewTable />
+            <CrewTable hideHeader={true} />
         </div>
     );
 }

@@ -28,15 +28,13 @@ export function UserNav({ email, role }: UserNavProps) {
             {/* Context Switchers - Visible on Desktop */}
             <div className="hidden md:flex items-center gap-2 mr-2">
                 <Link href="/logistica/dashboard">
-                    <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-primary">
-                        <Ship className="w-4 h-4" />
-                        Logística
+                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary" title="Vista Logística">
+                        <Ship className="w-5 h-5" />
                     </Button>
                 </Link>
                 <Link href="/admin">
-                    <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-primary">
-                        <Shield className="w-4 h-4" />
-                        Admin
+                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary" title="Panel Admin">
+                        <Shield className="w-5 h-5" />
                     </Button>
                 </Link>
             </div>

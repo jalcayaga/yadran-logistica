@@ -23,6 +23,7 @@ type HeaderBarProps = {
     children?: React.ReactNode;
     navContent?: React.ReactNode; // Added custom nav content
     onNavigateHome?: () => void;
+    showBranding?: boolean;
 };
 
 const HeaderBar = ({
@@ -39,14 +40,17 @@ const HeaderBar = ({
     children,
     navContent,
     onNavigateHome,
+    showBranding = true,
 }: HeaderBarProps) => (
     <div className={cn("overflow-hidden rounded-3xl border border-border bg-card shadow-xl ring-1 ring-border/40 mb-6", className)}>
         <div className="flex flex-col gap-4 p-4 md:p-6">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <div className="flex items-center gap-4">
-                    <BrandLogo variant="yadran" className="h-10 w-[120px] shrink-0" />
-                    <BrandLogo variant="netsea" className="h-12 w-[120px] shrink-0" />
-                </div>
+                {showBranding && (
+                    <div className="flex items-center gap-4">
+                        <BrandLogo variant="yadran" className="h-10 w-[120px] shrink-0" />
+                        <BrandLogo variant="netsea" className="h-12 w-[120px] shrink-0" />
+                    </div>
+                )}
 
                 {navContent && (
                     <div className="flex-1 flex justify-center">

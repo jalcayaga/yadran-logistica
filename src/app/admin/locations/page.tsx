@@ -15,7 +15,7 @@ export default function AdminLocationsPage() {
                     Administre puertos, centros de cultivo y bases operativas.
                 </p>
             </div>
-            <LocationTable />
+            <LocationTable hideHeader={true} />
         </div>
     );
 }

@@ -13,6 +13,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from '@/components/ui/card';
@@ -31,7 +32,8 @@ import {
     MoreHorizontal,
     LayoutDashboard,
     Loader2,
-    CalendarDays
+    CalendarDays,
+    Search
 } from 'lucide-react';
 import CrewManager from './CrewManager';
 import ManifestPreview from './ManifestPreview';
@@ -54,7 +56,7 @@ interface ItineraryWithRelations extends Omit<Itinerary, 'stops'> {
     }[];
 }
 
-export default function ItineraryTable() {
+export default function ItineraryTable({ hideHeader = false }: { hideHeader?: boolean }) {
     const supabase = createClient();
     const { toast } = useToast();
     const [itineraries, setItineraries] = useState<ItineraryWithRelations[]>([]);
@@ -66,6 +68,8 @@ export default function ItineraryTable() {
     const [managingCrew, setManagingCrew] = useState<ItineraryWithRelations | null>(null);
     const [viewingManifest, setViewingManifest] = useState<ItineraryWithRelations | null>(null);
     const [notifyDialog, setNotifyDialog] = useState<{ open: boolean, itinerary: ItineraryWithRelations | null }>({ open: false, itinerary: null });
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filteredItineraries, setFilteredItineraries] = useState<ItineraryWithRelations[]>([]);
 
     const fetchItineraries = async () => {
         setLoading(true);
@@ -85,6 +89,15 @@ export default function ItineraryTable() {
     useEffect(() => {
         fetchItineraries();
     }, []);
+
+    useEffect(() => {
+        const lowerTerm = searchTerm.toLowerCase();
+        const filtered = itineraries.filter(itin =>
+            (itin.vessel?.name || '').toLowerCase().includes(lowerTerm) ||
+            itin.stops.some(s => s.location?.name.toLowerCase().includes(lowerTerm))
+        );
+        setFilteredItineraries(filtered);
+    }, [searchTerm, itineraries]);
 
     const handleConfirmSend = async (target: 'passengers' | 'crew') => {
         if (!notifyDialog.itinerary) return;
@@ -178,39 +191,52 @@ export default function ItineraryTable() {
     return (
         <Card className="border-none shadow-xl bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
             <CardContent className="p-0">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-6 gap-4 border-b border-slate-100 dark:border-slate-800/50">
-                    <div className="flex flex-col gap-0.5">
-                        <h2 className="text-xl font-extrabold tracking-tight flex items-center gap-2.5 text-slate-900 dark:text-white">
-                            <div className="p-1.5 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                                <LayoutDashboard className="w-5 h-5 text-blue-600" />
-                            </div>
-                            Logística de Operaciones
-                        </h2>
-                        <p className="text-[11px] text-muted-foreground font-medium pl-10">
-                            Estado actual y programación de la flota activa
-                        </p>
+                <div className={`flex flex-col sm:flex-row ${hideHeader ? 'justify-end' : 'justify-between'} items-start sm:items-center p-6 gap-4 border-b border-slate-100 dark:border-slate-800/50`}>
+                    {!hideHeader && (
+                        <div className="flex flex-col gap-0.5">
+                            <h2 className="text-xl font-extrabold tracking-tight flex items-center gap-2.5 text-slate-900 dark:text-white">
+                                <div className="p-1.5 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                                    <LayoutDashboard className="w-5 h-5 text-blue-600" />
+                                </div>
+                                Logística de Operaciones
+                            </h2>
+                            <p className="text-[11px] text-muted-foreground font-medium pl-10">
+                                Estado actual y programación de la flota activa
+                            </p>
+                        </div>
+                    )}
+                    <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                        <div className="relative w-full sm:w-64 group">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-blue-500 transition-colors" />
+                            <Input
+                                placeholder="Buscar itinerario..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="pl-10 bg-white/80 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 focus-visible:ring-blue-500/20 focus-visible:border-blue-500 transition-all font-normal"
+                            />
+                        </div>
+                        <Dialog open={isOpen || !!editingItinerary} onOpenChange={(open) => { setIsOpen(open); if (!open) setEditingItinerary(null); }}>
+                            <DialogTrigger asChild>
+                                <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20 active:scale-95 transition-all font-normal w-full sm:w-auto">
+                                    <Plus className="mr-2 h-4 w-4" /> Nuevo Itinerario
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-3xl">
+                                <DialogHeader>
+                                    <DialogTitle className="text-xl flex items-center gap-2">
+                                        <CalendarDays className="w-5 h-5 text-blue-600" />
+                                        {editingItinerary ? 'Editar Itinerario' : 'Crear Nuevo Itinerario'}
+                                    </DialogTitle>
+                                </DialogHeader>
+                                <div className="py-2 font-normal">
+                                    <ItineraryForm
+                                        initialData={editingItinerary || undefined}
+                                        onSuccess={() => { setIsOpen(false); setEditingItinerary(null); fetchItineraries(); }}
+                                    />
+                                </div>
+                            </DialogContent>
+                        </Dialog>
                     </div>
-                    <Dialog open={isOpen || !!editingItinerary} onOpenChange={(open) => { if (!open) { setIsOpen(false); setEditingItinerary(null); } }}>
-                        <DialogTrigger asChild>
-                            <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20 active:scale-95 transition-all font-normal">
-                                <Plus className="mr-2 h-4 w-4" /> Nuevo Itinerario
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-3xl">
-                            <DialogHeader>
-                                <DialogTitle className="text-xl flex items-center gap-2">
-                                    <CalendarDays className="w-5 h-5 text-blue-600" />
-                                    {editingItinerary ? 'Editar Itinerario' : 'Crear Nuevo Itinerario'}
-                                </DialogTitle>
-                            </DialogHeader>
-                            <div className="py-2 font-normal">
-                                <ItineraryForm
-                                    initialData={editingItinerary || undefined}
-                                    onSuccess={() => { setIsOpen(false); setEditingItinerary(null); fetchItineraries(); }}
-                                />
-                            </div>
-                        </DialogContent>
-                    </Dialog>
                 </div>
 
                 <div className="overflow-hidden">
@@ -233,7 +259,7 @@ export default function ItineraryTable() {
                                         </TableCell>
                                     </TableRow>
                                 ))
-                            ) : itineraries.length === 0 ? (
+                            ) : filteredItineraries.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={5} className="text-center py-20 bg-slate-50/20 dark:bg-slate-900/20">
                                         <div className="flex flex-col items-center justify-center gap-3 text-muted-foreground">
@@ -243,7 +269,7 @@ export default function ItineraryTable() {
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                                itineraries.map((itin) => (
+                                filteredItineraries.map((itin) => (
                                     <TableRow key={itin.id} className="group hover:bg-white dark:hover:bg-slate-800/50 border-slate-100 dark:border-slate-800 transition-all duration-200">
                                         <TableCell className="py-4 px-6">
                                             <div className="flex flex-col gap-1">

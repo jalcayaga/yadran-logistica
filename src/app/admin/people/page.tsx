@@ -15,7 +15,7 @@ export default function AdminPeoplePage() {
                     Administre la base de datos de pasajeros registrados en el sistema.
                 </p>
             </div>
-            <PeopleTable />
+            <PeopleTable hideHeader={true} />
         </div>
     );
 }

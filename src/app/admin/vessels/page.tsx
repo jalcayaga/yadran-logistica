@@ -15,7 +15,7 @@ export default function AdminVesselsPage() {
                     Administre su flota, matrículas oficiales y capacidades de transporte.
                 </p>
             </div>
-            <VesselTable />
+            <VesselTable hideHeader={true} />
         </div>
     );
 }

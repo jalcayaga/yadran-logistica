@@ -47,7 +47,7 @@ interface RolesTableProps {
     initialUsers: UserRoleData[];
 }
 
-export default function RolesTable({ initialUsers }: RolesTableProps) {
+export default function RolesTable({ initialUsers, hideHeader = false }: RolesTableProps & { hideHeader?: boolean }) {
     const [users, setUsers] = useState<UserRoleData[]>(initialUsers);
     const [searchTerm, setSearchTerm] = useState('');
     const { toast } = useToast();
@@ -122,27 +122,31 @@ export default function RolesTable({ initialUsers }: RolesTableProps) {
     return (
         <Card className="border-none shadow-xl bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm overflow-hidden">
             <CardContent className="p-0">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-6 gap-4 border-b border-slate-100 dark:border-slate-800/50">
-                    <div className="flex flex-col gap-0.5">
-                        <h2 className="text-xl font-extrabold tracking-tight flex items-center gap-2.5 text-slate-900 dark:text-white">
-                            <div className="p-1.5 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                                <ShieldCheck className="w-5 h-5 text-purple-600" />
-                            </div>
-                            Usuarios Registrados
-                        </h2>
-                        <p className="text-[11px] text-muted-foreground font-medium pl-10">
-                            Listado completo de personal con acceso al sistema
-                        </p>
-                    </div>
+                <div className={`flex flex-col sm:flex-row ${hideHeader ? 'justify-end' : 'justify-between'} items-start sm:items-center p-6 gap-4 border-b border-slate-100 dark:border-slate-800/50`}>
+                    {!hideHeader && (
+                        <div className="flex flex-col gap-0.5">
+                            <h2 className="text-xl font-extrabold tracking-tight flex items-center gap-2.5 text-slate-900 dark:text-white">
+                                <div className="p-1.5 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                                    <ShieldCheck className="w-5 h-5 text-purple-600" />
+                                </div>
+                                Usuarios Registrados
+                            </h2>
+                            <p className="text-[11px] text-muted-foreground font-medium pl-10">
+                                Listado completo de personal con acceso al sistema
+                            </p>
+                        </div>
+                    )}
 
-                    <div className="relative w-full sm:w-64 group">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-purple-500 transition-colors" />
-                        <Input
-                            placeholder="Buscar por email o rol..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-10 bg-white/80 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 focus-visible:ring-purple-500/20 focus-visible:border-purple-500 transition-all font-normal"
-                        />
+                    <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                        <div className="relative w-full sm:w-64 group">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-purple-500 transition-colors" />
+                            <Input
+                                placeholder="Buscar por email o rol..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="pl-10 bg-white/80 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 focus-visible:ring-purple-500/20 focus-visible:border-purple-500 transition-all font-normal"
+                            />
+                        </div>
                     </div>
                 </div>
 

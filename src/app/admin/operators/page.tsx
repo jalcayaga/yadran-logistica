@@ -15,7 +15,7 @@ export default function AdminOperatorsPage() {
                     Administre empresas externas, servicios terrestres y marítimos.
                 </p>
             </div>
-            <OperatorTable />
+            <OperatorTable hideHeader={true} />
         </div>
     );
 }

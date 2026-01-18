@@ -15,7 +15,7 @@ export default function ItinerariesPage() {
                     Gestione la logística diaria, zarpes de naves y coordinación de pasajeros.
                 </p>
             </div>
-            <ItineraryTable />
+            <ItineraryTable hideHeader={true} />
         </div>
     );
 }
