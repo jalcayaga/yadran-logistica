@@ -168,15 +168,15 @@ export default function ItineraryForm({ onSuccess, initialData }: ItineraryFormP
             </div>}
 
             {/* Header: Date, Time, Vessel, Status */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border rounded-lg bg-gray-50/50">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-5 border border-slate-200 dark:border-slate-800 rounded-2xl bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm shadow-inner-white dark:shadow-none">
                 <div className="space-y-2">
                     <Label htmlFor="date">Fecha de Zarpe</Label>
-                    <Input type="date" {...register('date')} />
+                    <Input type="date" {...register('date')} className="dark:[color-scheme:dark]" />
                     {errors.date && <p className="text-red-500 text-xs">{errors.date.message}</p>}
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="start_time">Hora Inicio</Label>
-                    <Input type="time" {...register('start_time')} />
+                    <Input type="time" {...register('start_time')} className="dark:[color-scheme:dark]" />
                     {errors.start_time && <p className="text-red-500 text-xs">{errors.start_time.message}</p>}
                 </div>
                 <div className="space-y-2">
@@ -238,10 +238,12 @@ export default function ItineraryForm({ onSuccess, initialData }: ItineraryFormP
                             {/* Connector dot */}
                             <div className="absolute -left-[21px] top-4 w-3 h-3 rounded-full bg-blue-500 border-2 border-white shadow-sm z-10"></div>
 
-                            <Card className="relative">
+                            <Card className="relative border-slate-200 dark:border-slate-800/60 bg-white/30 dark:bg-slate-900/40 backdrop-blur-[2px] shadow-sm overflow-hidden">
                                 <CardContent className="p-4 grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-                                    <div className="md:col-span-1 text-xs font-bold text-muted-foreground pt-2">
-                                        #{index + 1}
+                                    <div className="md:col-span-1 flex items-center justify-center">
+                                        <div className="h-6 w-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-black text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                                            {index + 1}
+                                        </div>
                                     </div>
 
                                     <div className="md:col-span-4 space-y-1">
@@ -264,12 +266,12 @@ export default function ItineraryForm({ onSuccess, initialData }: ItineraryFormP
 
                                     <div className="md:col-span-3 space-y-1">
                                         <Label className="text-xs">Llegada</Label>
-                                        <Input type="time" {...register(`stops.${index}.arrival_time`)} placeholder="--:--" />
+                                        <Input type="time" {...register(`stops.${index}.arrival_time`)} placeholder="--:--" className="dark:[color-scheme:dark]" />
                                     </div>
 
                                     <div className="md:col-span-3 space-y-1">
                                         <Label className="text-xs">Salida</Label>
-                                        <Input type="time" {...register(`stops.${index}.departure_time`)} placeholder="--:--" />
+                                        <Input type="time" {...register(`stops.${index}.departure_time`)} placeholder="--:--" className="dark:[color-scheme:dark]" />
                                     </div>
 
                                     <div className="md:col-span-1 flex justify-end">

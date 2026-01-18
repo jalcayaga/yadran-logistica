@@ -25,7 +25,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <Sidebar role={role || undefined} />
 
             <div className="flex-1 flex flex-col min-w-0 lg:pl-72">
-                <div className="p-4 md:p-6 space-y-6">
+                <div className="p-4 md:p-8 space-y-6">
                     <HeaderBar
                         title="Admin Panel"
                         subtitle="Gestión Logística"
@@ -34,7 +34,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                         <UserNav email={user?.email} role={role} />
                     </HeaderBar>
 
-                    <main className="bg-background/60 shadow-sm border border-border/50 rounded-xl p-4 md:p-6 min-h-[calc(100vh-160px)]">
+                    <main className="bg-background/60 shadow-sm border border-border/50 rounded-xl p-4 md:p-8 min-h-[calc(100vh-160px)]">
                         {children}
                     </main>
                 </div>

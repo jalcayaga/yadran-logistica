@@ -86,14 +86,31 @@ export async function POST(request: NextRequest) {
         .single();
 
     if (itinError) {
+        // Fallback: If PostgREST has stale schema cache for 'created_by_email', try without it
+        if (itinError.message.includes('created_by_email') && itinError.message.includes('schema cache')) {
+            console.warn("Schema cache stale for created_by_email, retrying without it...");
+            const { data: fallbackItin, error: fallbackError } = await supabase
+                .from('itineraries')
+                .insert(itineraryData)
+                .select()
+                .single();
+
+            if (fallbackError) return NextResponse.json({ error: fallbackError.message }, { status: 400 });
+            return await handleStops(fallbackItin, stops);
+        }
         return NextResponse.json({ error: itinError.message }, { status: 400 });
     }
 
-    // 2. Insert Stops
+    return await handleStops(insertedItinerary, stops);
+}
+
+// Helper to handle stops insertion to avoid repeating code in fallback
+async function handleStops(itinerary: any, stops: any[]) {
+    const supabase = await createClient();
     const stopsToInsert = stops.map((stop, index) => ({
-        itinerary_id: insertedItinerary.id,
+        itinerary_id: itinerary.id,
         location_id: stop.location_id,
-        stop_order: index, // Ensure order is 0, 1, 2...
+        stop_order: index,
         arrival_time: stop.arrival_time || null,
         departure_time: stop.departure_time || null,
     }));
@@ -103,10 +120,9 @@ export async function POST(request: NextRequest) {
         .insert(stopsToInsert);
 
     if (stopsError) {
-        // Rollback itinerary... (manual compensation)
-        await supabase.from('itineraries').delete().eq('id', insertedItinerary.id);
+        await supabase.from('itineraries').delete().eq('id', itinerary.id);
         return NextResponse.json({ error: "Failed to save stops: " + stopsError.message }, { status: 400 });
     }
 
-    return NextResponse.json({ success: true, id: insertedItinerary.id });
+    return NextResponse.json({ success: true, id: itinerary.id });
 }

@@ -126,7 +126,7 @@ export default function LogisticsDashboard() {
     };
 
     return (
-        <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <div className="w-full space-y-8">
             {/* Header Section */}
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end mb-8 gap-6">
                 <div className="flex flex-col gap-2">

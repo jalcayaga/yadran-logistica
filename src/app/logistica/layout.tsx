@@ -14,7 +14,7 @@ export default async function LogisticaLayout({ children }: { children: React.Re
             <Sidebar role={role || undefined} />
 
             <div className="flex-1 flex flex-col min-w-0 lg:pl-72">
-                <div className="p-4 md:p-6 space-y-6">
+                <div className="p-4 md:p-8 space-y-6">
                     <HeaderBar
                         title="Logística Status"
                         subtitle="Vista de Operaciones"
@@ -23,7 +23,7 @@ export default async function LogisticaLayout({ children }: { children: React.Re
                         <UserNav email={user?.email} role={role} />
                     </HeaderBar>
 
-                    <main className="bg-background/60 shadow-sm border border-border/50 rounded-xl p-4 md:p-6">
+                    <main className="bg-background/60 shadow-sm border border-border/50 rounded-xl p-4 md:p-8">
                         {children}
                     </main>
                 </div>
