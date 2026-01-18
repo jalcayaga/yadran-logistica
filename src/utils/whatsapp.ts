@@ -99,7 +99,8 @@ export const sendItineraryToWebhook = async (itinerary: any, crew: any[], manife
                 phone: p.passenger?.phone_e164 || '',
                 role: 'passenger',
                 origin: p.origin_stop?.location?.name || '---',
-                destination: p.destination_stop?.location?.name || '---'
+                destination: p.destination_stop?.location?.name || '---',
+                confirmation_link: p.confirmation_link
             })),
             manifest_pdf: manifestUrl,
             timestamp: new Date().toISOString()

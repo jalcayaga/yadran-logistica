@@ -11,17 +11,17 @@ export default function CrewConfirmationPage() {
     useEffect(() => {
         async function confirm() {
             try {
-                const res = await fetch(`/api/public/confirm-crew/${token}`, {
+                const res = await fetch(`/api/public/confirm/${token}`, {
                     method: 'POST'
                 });
 
                 if (res.ok) {
                     setStatus('success');
-                    setMessage('¡Asignación confirmada con éxito!');
+                    setMessage('¡Viaje confirmado con éxito!');
                 } else {
                     const data = await res.json();
                     setStatus('error');
-                    setMessage(data.error || 'No se pudo confirmar la asignación.');
+                    setMessage(data.error || 'No se pudo confirmar el viaje.');
                 }
             } catch (err) {
                 setStatus('error');

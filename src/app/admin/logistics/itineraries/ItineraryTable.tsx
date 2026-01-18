@@ -102,7 +102,10 @@ export default function ItineraryTable() {
                 .eq('itinerary_id', itinerary.id);
 
             if (crewError) throw new Error("No se pudo obtener la tripulación");
-            const crewList = crewData || [];
+            const crewList = (crewData || []).map((c: any) => ({
+                ...c,
+                confirmation_link: `${window.location.origin}/confirm/${c.confirmation_token}`
+            }));
 
             const { data: bookingsData, error: bookingsError } = await supabase
                 .from('bookings')
@@ -111,7 +114,10 @@ export default function ItineraryTable() {
                 .neq('status', 'cancelled');
 
             if (bookingsError) throw new Error(`Error obteniendo pasajeros: ${bookingsError.message}`);
-            const bookingsList = bookingsData || [];
+            const bookingsList = (bookingsData || []).map((b: any) => ({
+                ...b,
+                confirmation_link: `${window.location.origin}/confirm/${b.confirmation_token}`
+            }));
 
             const { pdf } = await import('@react-pdf/renderer');
             const blob = await pdf(
