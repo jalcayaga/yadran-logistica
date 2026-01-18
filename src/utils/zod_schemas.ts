@@ -50,6 +50,11 @@ export const vesselSchema = z.object({
     type: VesselTypeEnum,
     capacity: z.coerce.number().int().nonnegative().default(0),
     registration_number: z.string().nullable().optional(),
+    operator_name: z.string().nullable().optional(),
+    call_sign: z.string().nullable().optional(),
+    nationality: z.string().nullable().optional().default('CHILENA'),
+    registration_port: z.string().nullable().optional(),
+    vessel_class: z.string().nullable().optional().default('LANCHA MOTOR'),
     active: z.boolean().default(true),
 });
 

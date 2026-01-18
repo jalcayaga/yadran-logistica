@@ -315,10 +315,14 @@ export default function BookingManager({ itinerary }: BookingManagerProps) {
             // Success
             fetchBookings();
             setIsDialogOpen(false);
+
+            const person = people.find(p => p.id === selectedPassenger);
+            const passengerName = person ? `${person.first_name} ${person.last_name}` : selectedPassenger;
+
             resetForm();
             toast({
                 title: editingBookingId ? "Reserva actualizada" : "Reserva creada",
-                description: `Pasajero ${selectedPassenger} asignado exitosamente.`,
+                description: `Pasajero ${passengerName} asignado exitosamente.`,
                 className: "bg-green-500 text-white border-green-600"
             });
         } catch (err: any) {

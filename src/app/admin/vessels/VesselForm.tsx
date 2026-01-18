@@ -53,6 +53,11 @@ export default function VesselForm({ onSuccess, initialData }: VesselFormProps) 
             type: 'other',
             capacity: 0,
             registration_number: '',
+            vessel_class: 'LANCHA MOTOR',
+            call_sign: '',
+            operator_name: 'Yadran Quellon',
+            registration_port: '',
+            nationality: 'CHILENA',
         }
     });
 
@@ -163,6 +168,66 @@ export default function VesselForm({ onSuccess, initialData }: VesselFormProps) 
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">pax</span>
                     </div>
                     {errors.capacity && <p className="text-red-500 text-[10px] font-bold">{errors.capacity.message}</p>}
+                </div>
+
+                <div className="space-y-2">
+                    <Label htmlFor="vessel_class" className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+                        <Ship className="w-3 h-3" /> Clase de Nave
+                    </Label>
+                    <Input
+                        id="vessel_class"
+                        placeholder="Ej: LANCHA MOTOR, BARCAZA..."
+                        className="h-11 bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 focus:ring-blue-500/20 uppercase"
+                        {...register('vessel_class')}
+                    />
+                </div>
+
+                <div className="space-y-2">
+                    <Label htmlFor="call_sign" className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+                        <Hash className="w-3 h-3" /> Distintivo de Llamada
+                    </Label>
+                    <Input
+                        id="call_sign"
+                        placeholder="Ej: CB 1234..."
+                        className="h-11 bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 focus:ring-blue-500/20 uppercase"
+                        {...register('call_sign')}
+                    />
+                </div>
+
+                <div className="space-y-2">
+                    <Label htmlFor="operator_name" className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+                        <Users className="w-3 h-3" /> Armador / Operador
+                    </Label>
+                    <Input
+                        id="operator_name"
+                        placeholder="Nombre del Armador..."
+                        className="h-11 bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 focus:ring-blue-500/20"
+                        {...register('operator_name')}
+                    />
+                </div>
+
+                <div className="space-y-2">
+                    <Label htmlFor="registration_port" className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+                        <Anchor className="w-3 h-3" /> Puerto de Matrícula
+                    </Label>
+                    <Input
+                        id="registration_port"
+                        placeholder="Ej: CHACABUCO, QUINTERO..."
+                        className="h-11 bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 focus:ring-blue-500/20 uppercase"
+                        {...register('registration_port')}
+                    />
+                </div>
+
+                <div className="space-y-2">
+                    <Label htmlFor="nationality" className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+                        <Ship className="w-3 h-3" /> Nacionalidad
+                    </Label>
+                    <Input
+                        id="nationality"
+                        placeholder="CHILENA"
+                        className="h-11 bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 focus:ring-blue-500/20 uppercase"
+                        {...register('nationality')}
+                    />
                 </div>
             </div>
 

@@ -1,104 +1,176 @@
 import React from 'react';
-import { Page, Text, View, Document, StyleSheet } from '@react-pdf/renderer';
+import { Page, Text, View, Document, StyleSheet, Font } from '@react-pdf/renderer';
+
+// Disable hyphenation globally to avoid "JUAN EN-RIQUE" issues
+Font.registerHyphenationCallback(word => [word]);
 
 // Create styles
 const styles = StyleSheet.create({
     page: {
         flexDirection: 'column',
         backgroundColor: '#FFFFFF',
-        padding: 30,
-        fontSize: 10,
+        padding: 35,
+        fontSize: 9,
         fontFamily: 'Helvetica',
     },
     header: {
-        marginBottom: 20,
-        borderBottom: 1,
-        paddingBottom: 10,
-        alignItems: 'center',
-    },
-    title: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        marginBottom: 5,
-        textTransform: 'uppercase',
-    },
-    subtitle: {
-        fontSize: 12,
-        marginBottom: 5,
-    },
-    infoSection: {
-        marginBottom: 20,
         flexDirection: 'row',
         justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        borderBottom: 2.5,
+        borderColor: '#000',
+        paddingBottom: 8,
+        marginBottom: 12,
     },
-    infoCol: {
-        width: '45%',
+    headerLogo: {
+        flexDirection: 'column',
+        gap: 1,
     },
-    label: {
+    headerTitle: {
+        fontSize: 16,
         fontWeight: 'bold',
-        fontSize: 9,
-        color: '#666',
+        textAlign: 'center',
+        textTransform: 'uppercase',
+        letterSpacing: 1,
     },
-    value: {
-        fontSize: 11,
-        marginBottom: 4,
+    operatorLine: {
+        fontSize: 8,
+        fontWeight: 'bold',
+        marginBottom: 8,
+        paddingBottom: 4,
+        borderBottom: 1,
+        borderColor: '#e0e0e0',
+    },
+    boxGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        marginBottom: 18,
+        borderWidth: 1.5,
+        borderColor: '#000',
+    },
+    box: {
+        padding: 6,
+        borderRightWidth: 1,
+        borderBottomWidth: 1,
+        borderColor: '#000',
+    },
+    boxLabel: {
+        fontSize: 6.5,
+        fontWeight: 'bold',
+        textTransform: 'uppercase',
+        marginBottom: 3,
+        color: '#333',
+    },
+    boxValue: {
+        fontSize: 9,
+        fontWeight: 'bold',
+        textTransform: 'uppercase',
+        textAlign: 'center',
+        paddingTop: 2,
     },
     table: {
         width: '100%',
-        borderStyle: 'solid',
-        borderWidth: 1,
+        borderWidth: 1.5,
         borderColor: '#000',
-        borderRightWidth: 0,
-        borderBottomWidth: 0,
     },
     tableRow: {
-        margin: 'auto',
         flexDirection: 'row',
+        borderBottomWidth: 1,
+        borderColor: '#000',
+        minHeight: 24,
+        alignItems: 'center',
     },
     tableHeader: {
-        backgroundColor: '#f0f0f0',
-        fontWeight: 'bold',
+        backgroundColor: '#f5f5f5',
+        minHeight: 28,
     },
     tableCol: {
-        borderStyle: 'solid',
-        borderWidth: 1,
-        borderLeftWidth: 0,
-        borderTopWidth: 0,
+        borderRightWidth: 1,
         borderColor: '#000',
-        padding: 5,
+        padding: 4,
+        justifyContent: 'center',
     },
-    colNum: { width: '4%' },
-    colName: { width: '22%' },
-    colRut: { width: '12%' },
-    colCompany: { width: '15%' },
-    colJob: { width: '15%' },
-    colOrg: { width: '16%' },
-    colDst: { width: '16%' },
-    colNat: { width: '5%' },
+    tableHeaderText: {
+        fontSize: 7.5,
+        fontWeight: 'bold',
+        textTransform: 'uppercase',
+    },
+    colNum: { width: '3%', textAlign: 'center' },
+    colName: { width: '24%' },
+    colRut: { width: '11%' },
+    colCompany: { width: '20%' },
+    colCargo: { width: '13%' },
+    colOrg: { width: '14%' },
+    colDst: { width: '15%', borderRightWidth: 0 },
 
     footer: {
-        position: 'absolute',
-        bottom: 30,
-        left: 30,
-        right: 30,
+        marginTop: 30,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-end',
+        gap: 20,
+    },
+    signatureSection: {
+        width: '45%',
+        flexDirection: 'column',
+        alignItems: 'center',
+    },
+    captainName: {
+        fontSize: 10,
+        fontWeight: 'bold',
+        marginBottom: 35,
         textAlign: 'center',
+        textTransform: 'uppercase',
+    },
+    signatureBox: {
+        width: '100%',
+        borderTopWidth: 1.5,
+        borderColor: '#000',
+        textAlign: 'center',
+        paddingTop: 6,
         fontSize: 8,
-        color: '#999',
-        borderTop: 1,
-        paddingTop: 10,
+        fontWeight: 'bold',
+    },
+    stampBox: {
+        width: '50%',
+        borderWidth: 1.5,
+        borderColor: '#000',
+        padding: 8,
+        minHeight: 85,
+        flexDirection: 'column',
+        justifyContent: 'center',
     },
 });
 
 interface ManifestProps {
     vesselName: string;
     vesselRegistration?: string;
+    vesselClass?: string;
+    callSign?: string;
+    operatorName?: string;
+    registrationPort?: string;
+    originPort?: string;
+    destinationPort?: string;
     itineraryDate: string;
     startTime: string;
     passengers: any[];
     crew: any[];
 }
 
-export const ManifestDocument = ({ vesselName, vesselRegistration, itineraryDate, startTime, passengers, crew = [] }: ManifestProps) => {
+export const ManifestDocument = ({
+    vesselName,
+    vesselRegistration,
+    vesselClass = 'L/M',
+    callSign = '---',
+    operatorName = 'YADRAN QUELLÓN',
+    registrationPort = '',
+    originPort = '---',
+    destinationPort = '---',
+    itineraryDate,
+    startTime,
+    passengers,
+    crew = []
+}: ManifestProps) => {
     // Group crew by role
     const captain = crew.find((c: any) => c.role === 'captain');
     const substitute = crew.find((c: any) => c.role === 'substitute');
@@ -108,54 +180,50 @@ export const ManifestDocument = ({ vesselName, vesselRegistration, itineraryDate
         <Document>
             <Page size="A4" style={styles.page}>
                 <View style={styles.header}>
-                    <Text style={styles.title}>Manifiesto de Zarpe</Text>
-                    <Text style={styles.subtitle}>Logística Yadran</Text>
+                    <View style={styles.headerLogo}>
+                        <Text style={{ fontSize: 8, color: '#333' }}>Armada de Chile</Text>
+                        <Text style={{ fontSize: 10, fontWeight: 'bold' }}>DIRECTEMAR</Text>
+                    </View>
+                    <Text style={styles.headerTitle}>Lista de Pasajeros</Text>
+                    <Text style={{ fontSize: 11, fontWeight: 'bold', letterSpacing: 0.5 }}>SALIDAS</Text>
                 </View>
 
-                <View style={styles.infoSection}>
-                    <View style={styles.infoCol}>
-                        <Text style={styles.label}>Nave:</Text>
-                        <Text style={styles.value}>{vesselName}</Text>
-                        <Text style={styles.label}>Matrícula:</Text>
-                        <Text style={styles.value}>{vesselRegistration || '---'}</Text>
-                        <Text style={styles.label}>Capitán:</Text>
-                        <Text style={styles.value}>{captain?.person ? `${captain.person.first_name} ${captain.person.last_name}` : '_______________________'}</Text>
-                    </View>
-                    <View style={styles.infoCol}>
-                        <Text style={styles.label}>Fecha Zarpe:</Text>
-                        <Text style={styles.value}>{itineraryDate}</Text>
-                        <Text style={styles.label}>Hora Programada:</Text>
-                        <Text style={styles.value}>{startTime}</Text>
-                    </View>
-                </View>
+                <Text style={styles.operatorLine}>ARMADOR / OPERADOR: {(operatorName || 'YADRAN QUELLÓN').toUpperCase()}</Text>
 
-                {/* Crew Section - Added */}
-                <View style={{ marginBottom: 20, padding: 10, backgroundColor: '#f9f9f9' }}>
-                    <Text style={[styles.label, { marginBottom: 5 }]}>Tripulación Asignada:</Text>
-                    {captain && (
-                        <Text style={{ fontSize: 10, marginBottom: 2 }}>• Capitán: {captain.person?.first_name} {captain.person?.last_name} ({captain.person?.rut_display})</Text>
-                    )}
-                    {substitute && (
-                        <Text style={{ fontSize: 10, marginBottom: 2 }}>• Patrón: {substitute.person?.first_name} {substitute.person?.last_name} ({substitute.person?.rut_display})</Text>
-                    )}
-                    {crewMembers.map((cm: any, idx: number) => (
-                        <Text key={idx} style={{ fontSize: 10, marginBottom: 2 }}>• Tripulante: {cm.person?.first_name} {cm.person?.last_name} ({cm.person?.rut_display})</Text>
-                    ))}
-                    {crew.length === 0 && (
-                        <Text style={{ fontSize: 10, color: '#999' }}>Ninguna tripulación asignada</Text>
-                    )}
+                <View style={styles.boxGrid}>
+                    <View style={[styles.box, { width: '65%' }]}>
+                        <Text style={styles.boxLabel}>Clase, nombre de la embarcación, distintivo de llamada</Text>
+                        <Text style={styles.boxValue}>{(vesselClass || 'L/M').toUpperCase()} {(vesselName || 'NAVE').toUpperCase()} {(callSign || '---').toUpperCase()}</Text>
+                    </View>
+                    <View style={[styles.box, { width: '15%', borderRightWidth: 1 }]}>
+                        <Text style={styles.boxLabel}>Puerto salida</Text>
+                        <Text style={styles.boxValue}>{(originPort || '---').toUpperCase()}</Text>
+                    </View>
+                    <View style={[styles.box, { width: '20%', borderRightWidth: 0 }]}>
+                        <Text style={styles.boxLabel}>Fecha salida</Text>
+                        <Text style={styles.boxValue}>{itineraryDate || '---'}</Text>
+                    </View>
+
+                    <View style={[styles.box, { width: '65%', borderBottomWidth: 0 }]}>
+                        <Text style={styles.boxLabel}>Nacionalidad de la embarcación / número de matrícula</Text>
+                        <Text style={styles.boxValue}>CHILENA / {(registrationPort || '').toUpperCase()} {(vesselRegistration || '---').toUpperCase()}</Text>
+                    </View>
+                    <View style={[styles.box, { width: '35%', borderBottomWidth: 0, borderRightWidth: 0 }]}>
+                        <Text style={styles.boxLabel}>Puerto de destino</Text>
+                        <Text style={styles.boxValue}>{(destinationPort || '---').toUpperCase()}</Text>
+                    </View>
                 </View>
 
                 <View style={styles.table}>
                     {/* Header */}
                     <View style={[styles.tableRow, styles.tableHeader]}>
-                        <View style={[styles.tableCol, styles.colNum]}><Text>N°</Text></View>
-                        <View style={[styles.tableCol, styles.colName]}><Text>Nombre</Text></View>
-                        <View style={[styles.tableCol, styles.colRut]}><Text>RUT</Text></View>
-                        <View style={[styles.tableCol, styles.colCompany]}><Text>Empresa</Text></View>
-                        <View style={[styles.tableCol, styles.colJob]}><Text>Cargo</Text></View>
-                        <View style={[styles.tableCol, styles.colOrg]}><Text>Origen</Text></View>
-                        <View style={[styles.tableCol, styles.colDst]}><Text>Destino</Text></View>
+                        <View style={[styles.tableCol, styles.colNum]}><Text style={styles.tableHeaderText}>N°</Text></View>
+                        <View style={[styles.tableCol, styles.colName]}><Text style={styles.tableHeaderText}>Nombre</Text></View>
+                        <View style={[styles.tableCol, styles.colRut]}><Text style={styles.tableHeaderText}>RUT</Text></View>
+                        <View style={[styles.tableCol, styles.colCompany]}><Text style={styles.tableHeaderText}>Empresa</Text></View>
+                        <View style={[styles.tableCol, styles.colCargo]}><Text style={styles.tableHeaderText}>Cargo</Text></View>
+                        <View style={[styles.tableCol, styles.colOrg]}><Text style={styles.tableHeaderText}>Origen</Text></View>
+                        <View style={[styles.tableCol, styles.colDst]}><Text style={styles.tableHeaderText}>Destino</Text></View>
                     </View>
 
                     {/* Rows */}
@@ -166,16 +234,16 @@ export const ManifestDocument = ({ vesselName, vesselRegistration, itineraryDate
                     ) : (
                         passengers.map((p, index) => (
                             <View style={styles.tableRow} key={index}>
-                                <View style={[styles.tableCol, styles.colNum]}><Text>{index + 1}</Text></View>
-                                <View style={[styles.tableCol, styles.colName]}><Text>{(p.passenger || p.person)?.first_name} {(p.passenger || p.person)?.last_name}</Text></View>
-                                <View style={[styles.tableCol, styles.colRut]}><Text>{(p.passenger || p.person)?.rut_display || 'S/I'}</Text></View>
-                                <View style={[styles.tableCol, styles.colCompany]}><Text>{(p.passenger || p.person)?.company || '---'}</Text></View>
-                                <View style={[styles.tableCol, styles.colJob]}><Text>{(p.passenger || p.person)?.job_title || '---'}</Text></View>
-                                <View style={[styles.tableCol, styles.colOrg]}><Text>
-                                    {(p.origin_stop?.location?.name || p.origin?.location?.name || '---')}
+                                <View style={[styles.tableCol, styles.colNum]}><Text style={{ fontSize: 8 }}>{index + 1}</Text></View>
+                                <View style={[styles.tableCol, styles.colName]}><Text style={{ fontSize: 8, fontWeight: 'bold' }}>{((p.passenger?.first_name || p.person?.first_name || '') + ' ' + (p.passenger?.last_name || p.person?.last_name || '')).trim().toUpperCase() || 'PASAJERO'}</Text></View>
+                                <View style={[styles.tableCol, styles.colRut]}><Text style={{ fontSize: 7.5 }}>{p.passenger?.rut_display || p.person?.rut_display || '---'}</Text></View>
+                                <View style={[styles.tableCol, styles.colCompany]}><Text style={{ fontSize: 7.5 }}>{(p.passenger?.company || p.person?.company || '---').toUpperCase()}</Text></View>
+                                <View style={[styles.tableCol, styles.colCargo]}><Text style={{ fontSize: 7.5 }}>{(p.passenger?.job_title || p.person?.job_title || '---').toUpperCase()}</Text></View>
+                                <View style={[styles.tableCol, styles.colOrg]}><Text style={{ fontSize: 7.5 }}>
+                                    {(p.origin_stop?.location?.name || p.origin?.location?.name || '---').toUpperCase()}
                                 </Text></View>
-                                <View style={[styles.tableCol, styles.colDst]}><Text>
-                                    {(p.destination_stop?.location?.name || p.destination?.location?.name || '---')}
+                                <View style={[styles.tableCol, styles.colDst]}><Text style={{ fontSize: 7.5 }}>
+                                    {(p.destination_stop?.location?.name || p.destination?.location?.name || '---').toUpperCase()}
                                 </Text></View>
                             </View>
                         ))
@@ -184,7 +252,17 @@ export const ManifestDocument = ({ vesselName, vesselRegistration, itineraryDate
 
 
                 <View style={styles.footer}>
-                    <Text>Generado automáticamente por Sistema Logístico Yadran - {new Date().toLocaleString("es-CL")}</Text>
+                    <View style={styles.signatureSection}>
+                        <Text style={styles.captainName}>{captain?.person ? `${captain.person.first_name} ${captain.person.last_name}`.toUpperCase() : ''}</Text>
+                        <Text style={styles.signatureBox}>Firma del Capitán / Patrón</Text>
+                    </View>
+
+                    <View style={styles.stampBox}>
+                        <Text style={{ fontSize: 9, fontWeight: 'bold', color: '#cc0000', textAlign: 'center', marginBottom: 6, letterSpacing: 0.5 }}>FIRMA ELECTRÓNICA</Text>
+                        <Text style={{ fontSize: 7.5, textAlign: 'center', color: '#333' }}>Validado por Sistema Logístico Yadran</Text>
+                        <Text style={{ fontSize: 7, textAlign: 'center', marginTop: 12, fontFamily: 'Courier' }}>Control ID: {new Date().getTime().toString(36).toUpperCase()}</Text>
+                        <Text style={{ fontSize: 7, textAlign: 'center', marginTop: 2, color: '#666' }}>{new Date().toLocaleString("es-CL")}</Text>
+                    </View>
                 </View>
             </Page>
         </Document>

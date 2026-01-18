@@ -33,8 +33,8 @@ export function getCaptainManifestLink(
 
     message += `\n*Pasajeros:*\n`;
     passengers.forEach((p, idx) => {
-        const name = p.person ? `${p.person.first_name} ${p.person.last_name}` : 'Pasajero';
-        const dest = p.destination?.location?.name || 'Destino';
+        const name = p.passenger ? `${p.passenger.first_name} ${p.passenger.last_name}` : 'Pasajero';
+        const dest = p.destination_stop?.location?.name || p.destination?.location?.name || 'Destino';
         message += `${idx + 1}. ${name} -> ${dest}\n`;
     });
 
@@ -55,8 +55,8 @@ export function getPassengerNotificationLink(
     const date = formatDate(itinerary.date);
     const time = itinerary.start_time;
     const vesselName = itinerary.vessel?.name || 'la nave asignada';
-    const origin = booking.origin?.location?.name || 'Origen';
-    const dest = booking.destination?.location?.name || 'Destino';
+    const origin = booking.origin_stop?.location?.name || booking.origin?.location?.name || 'Origen';
+    const dest = booking.destination_stop?.location?.name || booking.destination?.location?.name || 'Destino';
 
     const message = `Hola ${passengerName}, recordatorio de tu viaje con Logística Yadran.\n\n` +
         `📅 Fecha: ${date} a las ${time}\n` +
