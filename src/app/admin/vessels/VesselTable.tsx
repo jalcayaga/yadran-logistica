@@ -225,6 +225,13 @@ export default function VesselTable({ hideHeader = false }: { hideHeader?: boole
                                             </div>
                                         </TableCell>
                                         <TableCell className="py-4">
+                                            <div className="flex items-center gap-2">
+                                                <div className="px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800 font-mono text-xs border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 shadow-inner">
+                                                    {vessel.registration_number || 'S/I'}
+                                                </div>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="py-4">
                                             <Badge variant="outline" className={`px-2 py-0.5 font-medium border capitalize ${getTypeColor(vessel.type)}`}>
                                                 {vessel.type}
                                             </Badge>
@@ -233,13 +240,6 @@ export default function VesselTable({ hideHeader = false }: { hideHeader?: boole
                                             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                                                 <Users className="w-3 h-3" />
                                                 {vessel.capacity || 0}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell className="py-4">
-                                            <div className="flex items-center gap-2">
-                                                <div className="px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800 font-mono text-xs border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 shadow-inner">
-                                                    {vessel.registration_number || 'S/I'}
-                                                </div>
                                             </div>
                                         </TableCell>
                                         <TableCell className="py-4 text-right pr-6">
