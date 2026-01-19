@@ -180,8 +180,8 @@ export default function VesselTable({ hideHeader = false }: { hideHeader?: boole
                                         Tipo <ArrowUpDown className="h-3 w-3 opacity-50" />
                                     </div>
                                 </TableHead>
-                                <TableHead onClick={() => handleSort('capacity')} className="cursor-pointer hover:text-blue-600 transition-colors py-4">
-                                    <div className="flex items-center gap-2 uppercase text-xs font-black tracking-widest text-slate-500 dark:text-slate-400/80">
+                                <TableHead onClick={() => handleSort('capacity')} className="cursor-pointer hover:text-blue-600 transition-colors py-4 text-center">
+                                    <div className="flex items-center justify-center gap-2 uppercase text-xs font-black tracking-widest text-slate-500 dark:text-slate-400/80">
                                         Capacidad <ArrowUpDown className="h-3 w-3 opacity-50" />
                                     </div>
                                 </TableHead>
