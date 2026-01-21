@@ -403,7 +403,7 @@ export default function ItineraryTable({ hideHeader = false }: { hideHeader?: bo
                                             </div>
                                         </TableCell>
                                         <TableCell className="py-4 text-center">
-                                            <OperationalBadge itineraryId={itin.id} />
+                                            <OperationalBadge itineraryId={itin.id as string} />
                                         </TableCell>
                                         <TableCell className="py-4 text-center">
                                             <Badge variant="outline" className={`px-2.5 py-0.5 font-bold border rounded-full text-[10px] ${getStatusColor(itin.status)}`}>
