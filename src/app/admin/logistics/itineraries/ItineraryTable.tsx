@@ -1,5 +1,70 @@
 'use client';
 
+function OperationalBadge({ itineraryId }: { itineraryId: string }) {
+    const [evalData, setEvalData] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        async function fetchEval() {
+            try {
+                const res = await fetch(`/api/logistics/evaluate/${itineraryId}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    setEvalData(data);
+                }
+            } catch (err) {
+                console.error(err);
+            } finally {
+                setLoading(false);
+            }
+        }
+        fetchEval();
+    }, [itineraryId]);
+
+    if (loading) return <div className="h-4 w-12 bg-slate-100 animate-pulse rounded mx-auto" />;
+
+    const decision = evalData?.decision || 'DESCONOCIDO';
+    const reasons = evalData?.reasons || [];
+
+    const colors = {
+        'GO': 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400',
+        'EVAL': 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400',
+        'NO-GO': 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400',
+        'DESCONOCIDO': 'bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-400'
+    };
+
+    const icons = {
+        'GO': <CircleCheck className="w-3 h-3 mr-1" />,
+        'EVAL': <CircleAlert className="w-3 h-3 mr-1" />,
+        'NO-GO': <AlertTriangle className="w-3 h-3 mr-1" />,
+        'DESCONOCIDO': <HelpCircle className="w-3 h-3 mr-1" />
+    };
+
+    return (
+        <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Badge variant="outline" className={`px-2 py-0.5 font-bold border rounded-md text-[9px] cursor-help flex items-center justify-center mx-auto ${(colors as any)[decision]}`}>
+                        {(icons as any)[decision]}
+                        {decision}
+                    </Badge>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs font-normal">
+                    <p className="font-bold mb-1">{evalData?.summary || 'Estado de navegación desconocido'}</p>
+                    {reasons.length > 0 ? (
+                        <ul className="text-[10px] space-y-1">
+                            {reasons.map((r: string, i: number) => <li key={i} className="flex gap-1"><span>•</span> {r}</li>)}
+                        </ul>
+                    ) : (
+                        <p className="text-[10px]">Sin alertas meteorológicas activas.</p>
+                    )}
+                </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
+    );
+}
+
+
 import { useState, useEffect } from "react";
 import { Itinerary } from '@/utils/zod_schemas';
 import { createClient } from '@/utils/supabase/client';
@@ -43,6 +108,20 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import ItineraryForm from './ItineraryForm';
 import BookingManager from './BookingManager';
 import { formatDate } from "@/utils/formatters";
+import {
+    AlertTriangle,
+    CircleCheck,
+    CircleAlert,
+    HelpCircle,
+    Thermometer,
+    Wind
+} from 'lucide-react';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 interface ItineraryWithRelations extends Omit<Itinerary, 'stops'> {
     vessel?: { name: string; capacity: number; registration_number?: string };
@@ -109,6 +188,8 @@ export default function ItineraryTable({ hideHeader = false }: { hideHeader?: bo
         toast({ title: "Procesando...", description: `Notificando a ${target === 'passengers' ? 'Pasajeros' : 'Tripulación'}...` });
 
         try {
+            const productionUrl = 'https://yadran-logistica.artifact.cl';
+
             const { data: crewData, error: crewError } = await supabase
                 .from('crew_assignments')
                 .select('*, person:people(*)')
@@ -117,7 +198,7 @@ export default function ItineraryTable({ hideHeader = false }: { hideHeader?: bo
             if (crewError) throw new Error("No se pudo obtener la tripulación");
             const crewList = (crewData || []).map((c: any) => ({
                 ...c,
-                confirmation_link: `${window.location.origin}/confirm/${c.confirmation_token}`
+                confirmation_link: `${productionUrl}/confirm/${c.confirmation_token}`
             }));
 
             const { data: bookingsData, error: bookingsError } = await supabase
@@ -129,7 +210,7 @@ export default function ItineraryTable({ hideHeader = false }: { hideHeader?: bo
             if (bookingsError) throw new Error(`Error obteniendo pasajeros: ${bookingsError.message}`);
             const bookingsList = (bookingsData || []).map((b: any) => ({
                 ...b,
-                confirmation_link: `${window.location.origin}/confirm/${b.confirmation_token}`
+                confirmation_link: `${productionUrl}/confirm/${b.confirmation_token}`
             }));
 
             const { pdf } = await import('@react-pdf/renderer');
@@ -154,7 +235,13 @@ export default function ItineraryTable({ hideHeader = false }: { hideHeader?: bo
 
             const { data: { publicUrl } } = supabase.storage.from('manifests').getPublicUrl(fileName);
 
-            const itinWithTarget = { ...itinerary, target };
+            // Update itinerary with the manifest URL
+            await supabase
+                .from('itineraries')
+                .update({ manifest_pdf: publicUrl } as any)
+                .eq('id', itinerary.id);
+
+            const itinWithTarget = { ...itinerary, target, manifest_pdf: publicUrl };
             const result = await sendItineraryToWebhook(itinWithTarget, crewList, publicUrl, bookingsList);
 
             if (result.success) {
@@ -246,6 +333,7 @@ export default function ItineraryTable({ hideHeader = false }: { hideHeader?: bo
                                 <TableHead className="py-4 px-6 uppercase text-xs font-black tracking-widest text-slate-500 dark:text-slate-400/80">Fecha y Hora</TableHead>
                                 <TableHead className="py-4 uppercase text-xs font-black tracking-widest text-slate-500 dark:text-slate-400/80">Embarcación</TableHead>
                                 <TableHead className="py-4 uppercase text-xs font-black tracking-widest text-slate-500 dark:text-slate-400/80">Ruta y Paradas</TableHead>
+                                <TableHead className="py-4 text-center uppercase text-xs font-black tracking-widest text-slate-500 dark:text-slate-400/80">Evaluación Marítima</TableHead>
                                 <TableHead className="py-4 text-center uppercase text-xs font-black tracking-widest text-slate-500 dark:text-slate-400/80">Estado</TableHead>
                                 <TableHead className="py-4 text-right pr-6 uppercase text-xs font-black tracking-widest text-slate-500 dark:text-slate-400/80">Gestión</TableHead>
                             </TableRow>
@@ -313,6 +401,9 @@ export default function ItineraryTable({ hideHeader = false }: { hideHeader?: bo
                                                     </div>
                                                 ))}
                                             </div>
+                                        </TableCell>
+                                        <TableCell className="py-4 text-center">
+                                            <OperationalBadge itineraryId={itin.id} />
                                         </TableCell>
                                         <TableCell className="py-4 text-center">
                                             <Badge variant="outline" className={`px-2.5 py-0.5 font-bold border rounded-full text-[10px] ${getStatusColor(itin.status)}`}>
@@ -393,7 +484,7 @@ export default function ItineraryTable({ hideHeader = false }: { hideHeader?: bo
                             Detalle de tripulación y pasajeros para el zarpe seleccionado.
                         </DialogDescription>
                     </DialogHeader>
-                    {viewingManifest && viewingManifest.id && <ManifestPreview itineraryId={viewingManifest.id} />}
+                    {viewingManifest && viewingManifest.id && <ManifestPreview itineraryId={viewingManifest.id as string} />}
                 </DialogContent>
             </Dialog>
 

@@ -13,13 +13,15 @@ export async function POST(request: Request) {
     }
 
     try {
+        // Initialize payload variables with defaults
         const body = await request.json();
+        const baseUrl = 'https://yadran-logistica.artifact.cl';
+
+        let manifestUrl = body.manifest_pdf || '';
+        let crewWithTokens = body.crew || [];
+
         const { createAdminClient } = await import('@/utils/supabase/admin');
         const supabase = createAdminClient();
-
-        // Initialize payload variables with defaults
-        let manifestUrl = '';
-        let crewWithTokens = body.crew || [];
 
         // --- 1. Generate/Get Tracking Link (if itinerary exists) ---
         let trackingLink = '';
@@ -28,14 +30,17 @@ export async function POST(request: Request) {
 
             // 2. Fetch manifest and crew data if target is crew or all
             if (body.target === 'crew' || body.target === 'all') {
-                const { data: itin } = await supabase
-                    .from('itineraries')
-                    .select('manifest_pdf')
-                    .eq('id', body.itinerary.id)
-                    .single();
-                manifestUrl = itin?.manifest_pdf || '';
+                // If manifestUrl is not provided in body, try fetching from DB
+                if (!manifestUrl) {
+                    const { data: itin } = await supabase
+                        .from('itineraries')
+                        .select('manifest_pdf' as any)
+                        .eq('id', body.itinerary.id)
+                        .single();
+                    manifestUrl = (itin as any)?.manifest_pdf || '';
+                }
 
-                // Fetch confirmation tokens for crew
+                // Fetch confirmation tokens for crew to ensure links are correct
                 const { data: assignments } = await supabase
                     .from('crew_assignments')
                     .select('person_id, confirmation_token')
@@ -43,10 +48,12 @@ export async function POST(request: Request) {
 
                 if (assignments) {
                     crewWithTokens = crewWithTokens.map((c: any) => {
-                        const match = assignments.find(a => a.person_id === c.id);
+                        const match = assignments.find(a => a.person_id === c.person_id || a.person_id === c.id);
+                        const isCaptain = c.role === 'captain' || c.role === 'substitute';
                         return {
                             ...c,
-                            confirmation_link: match ? `https://yadran-logistica.artifact.cl/confirm/${match.confirmation_token}` : ''
+                            confirmation_link: match ? `${baseUrl}/confirm/${match.confirmation_token}` : (c.confirmation_link || ''),
+                            manifest_dashboard_link: (match && isCaptain) ? `${baseUrl}/m/${match.confirmation_token}` : ''
                         };
                     });
                 }
@@ -59,7 +66,7 @@ export async function POST(request: Request) {
             );
 
             if (token) {
-                trackingLink = `https://yadran-logistica.artifact.cl/i/${token}`;
+                trackingLink = `${baseUrl}/i/${token}`;
             }
         }
 
@@ -71,9 +78,15 @@ export async function POST(request: Request) {
                 ...body.itinerary,
                 manifest_pdf: manifestUrl
             },
-            passengers: body.passengers || [],
+            passengers: (body.passengers || []).map((p: any) => ({
+                ...p,
+                // Ensure passenger confirmation links also use the correct baseUrl if they exist
+                confirmation_link: p.confirmation_link ? p.confirmation_link.replace(/https?:\/\/[^\/]+/, baseUrl) : ''
+            })),
             crew: crewWithTokens,
-            tracking_link: trackingLink
+            tracking_link: trackingLink,
+            manifest_pdf: manifestUrl, // Also at top level for convenience in n8n
+            maritime_evaluation: body.maritime_evaluation // Pass through from client
         };
 
 

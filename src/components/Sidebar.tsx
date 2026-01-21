@@ -16,7 +16,8 @@ import {
     ShieldCheck,
     Menu,
     X,
-    ChevronRight
+    ChevronRight,
+    Radar,
 } from 'lucide-react';
 import { BrandLogo } from './BrandLogo';
 import { Button } from './ui/button';
@@ -45,6 +46,7 @@ const NAV_GROUPS: NavGroup[] = [
         group: "Principal",
         items: [
             { label: "Resumen Operativo", href: "/logistica/dashboard", icon: LayoutDashboard, color: "text-blue-500" },
+            { label: "Monitoreo Marítimo", href: "/admin/logistics/maritime", icon: Radar, color: "text-cyan-500" },
         ]
     },
     {

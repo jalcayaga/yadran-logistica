@@ -79,6 +79,17 @@ export const sendItineraryToWebhook = async (itinerary: any, crew: any[], manife
         const sortedStops = [...stops].sort((a: any, b: any) => a.stop_order - b.stop_order);
         const fullRoute = sortedStops.map((s: any) => s.location?.name || '---').join(' -> ');
 
+        // Fetch Maritime Evaluation for n8n to know if there's a weather reason
+        let maritimeEval = null;
+        try {
+            const evalRes = await fetch(`/api/logistics/evaluate/${itinerary.id}`);
+            if (evalRes.ok) {
+                maritimeEval = await evalRes.json();
+            }
+        } catch (e) {
+            console.warn("Failed to fetch maritime evaluation for notification", e);
+        }
+
         const payload = {
             event: 'manual_send',
             target: itinerary.target || 'all',
@@ -103,6 +114,7 @@ export const sendItineraryToWebhook = async (itinerary: any, crew: any[], manife
                 confirmation_link: p.confirmation_link
             })),
             manifest_pdf: manifestUrl,
+            maritime_evaluation: maritimeEval,
             timestamp: new Date().toISOString()
         };
 
