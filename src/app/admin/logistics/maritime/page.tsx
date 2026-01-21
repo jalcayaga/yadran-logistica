@@ -17,8 +17,8 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Input } from '@/components/ui/input';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
     Table,
     TableBody,
@@ -27,6 +27,7 @@ import {
     TableHeader,
     TableRow
 } from '@/components/ui/table';
+import { useToast } from "@/hooks/use-toast";
 
 interface WeatherData {
     wind_speed: number;
@@ -58,16 +59,29 @@ export default function MaritimeDashboard() {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
 
-    const fetchData = async () => {
-        setLoading(true);
+    const { toast } = useToast();
+
+    const fetchData = async (isManual = false) => {
+        if (isManual) setLoading(true);
         try {
             const res = await fetch('/api/maritime/snapshots');
             if (res.ok) {
                 const json = await res.json();
                 setData(json);
+                if (isManual) {
+                    toast({
+                        title: "Sincronización Exitosa",
+                        description: "Los datos de puertos y centros han sido actualizados.",
+                    });
+                }
             }
         } catch (error) {
             console.error("Error fetching maritime snapshots:", error);
+            toast({
+                variant: "destructive",
+                title: "Error de Conexión",
+                description: "No se pudieron obtener los datos en tiempo real.",
+            });
         } finally {
             setLoading(false);
         }
@@ -122,23 +136,24 @@ export default function MaritimeDashboard() {
                         Sincronización en tiempo real • Red de Monitoreo Yadran
                     </p>
                 </div>
-                <div className="flex items-center gap-4 bg-zinc-900/50 p-2 rounded-2xl border border-zinc-100/10 backdrop-blur-md">
-                    <Badge variant="outline" className="px-4 py-1.5 bg-emerald-500/10 text-emerald-400 border-emerald-500/30 font-bold tracking-wider">
+                <div className="flex items-center gap-4 bg-zinc-900/50 p-2 rounded-2xl border border-zinc-100/10 backdrop-blur-md self-start md:self-auto">
+                    <Badge variant="outline" className="px-4 py-1.5 bg-emerald-500/10 text-emerald-400 border-emerald-500/30 font-bold tracking-wider hidden sm:flex">
                         <span className="w-2 h-2 rounded-full bg-emerald-500 mr-2 animate-pulse" />
                         LIVE DATA
                     </Badge>
                     <button
-                        onClick={fetchData}
-                        className="p-2.5 hover:bg-zinc-800 rounded-xl transition-all active:scale-95 text-zinc-400 hover:text-white border border-transparent hover:border-zinc-700"
+                        onClick={() => fetchData(true)}
+                        className="p-2.5 hover:bg-zinc-800 rounded-xl transition-all active:scale-95 text-zinc-400 hover:text-white border border-transparent hover:border-zinc-700 flex items-center gap-2"
                         title="Actualizar ahora"
                     >
-                        <RefreshCw className="w-5 h-5" />
+                        <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin text-blue-400' : ''}`} />
+                        <span className="text-sm font-bold md:hidden">ACTUALIZAR</span>
                     </button>
                 </div>
             </div>
 
             {/* Ports Status Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-5 px-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5 px-1">
                 {data?.ports.map((port) => (
                     <Card key={port.id} className="relative overflow-hidden border-zinc-800 bg-zinc-900/40 backdrop-blur-xl hover:bg-zinc-800/60 transition-all duration-300 group shadow-2xl">
                         <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-25 transition-opacity">
@@ -217,7 +232,87 @@ export default function MaritimeDashboard() {
                     </div>
                 </CardHeader>
                 <CardContent className="p-0">
-                    <div className="overflow-x-auto">
+                    {/* Mobile View: Cards */}
+                    <div className="md:hidden divide-y divide-zinc-800">
+                        {filteredCenters.length === 0 ? (
+                            <div className="h-48 flex flex-col items-center justify-center opacity-40">
+                                <Search className="w-10 h-10 mb-2" />
+                                <p>No se encontraron centros</p>
+                            </div>
+                        ) : (
+                            filteredCenters.map((center) => (
+                                <div key={center.id} className="p-6 space-y-4 hover:bg-zinc-800/10 transition-colors">
+                                    <div className="flex justify-between items-start">
+                                        <div className="flex flex-col">
+                                            <span className="text-xl font-bold text-zinc-100">{center.name}</span>
+                                            <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">{center.code}</span>
+                                        </div>
+                                        {center.weather?.timestamp && (
+                                            <Badge variant="outline" className="text-[10px] font-mono border-zinc-700 text-zinc-400 bg-zinc-900/50">
+                                                {new Date(center.weather.timestamp).toLocaleString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+                                            </Badge>
+                                        )}
+                                    </div>
+
+                                    {center.weather ? (
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-1.5 p-3 rounded-xl bg-zinc-950/40 border border-zinc-800/40">
+                                                <div className="flex items-center gap-2 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">
+                                                    <Wind className="w-3.5 h-3.5" /> Viento
+                                                </div>
+                                                <div className="flex items-baseline gap-1.5">
+                                                    <span className={`text-xl font-black ${getWindColor(center.weather.wind_speed).split(' ')[0]}`}>
+                                                        {center.weather.wind_speed}
+                                                    </span>
+                                                    <span className="text-[10px] font-bold text-zinc-600">KT</span>
+                                                </div>
+                                            </div>
+                                            <div className="space-y-1.5 p-3 rounded-xl bg-zinc-950/40 border border-zinc-800/40">
+                                                <div className="flex items-center gap-2 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">
+                                                    <Waves className="w-3.5 h-3.5" /> Olas
+                                                </div>
+                                                <div className="flex items-baseline gap-1.5">
+                                                    <span className={`text-xl font-black ${center.weather.wave_height > 2.5 ? 'text-blue-400' : 'text-zinc-200'}`}>
+                                                        {center.weather.wave_height}
+                                                    </span>
+                                                    <span className="text-[10px] font-bold text-zinc-600">M</span>
+                                                </div>
+                                            </div>
+                                            <div className="space-y-1.5 p-3 rounded-xl bg-zinc-950/40 border border-zinc-800/40">
+                                                <div className="flex items-center gap-2 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">
+                                                    <Wind className="w-3.5 h-3.5 opacity-50" /> Ráfagas
+                                                </div>
+                                                <div className="flex items-baseline gap-1.5">
+                                                    <span className="text-xl font-bold text-zinc-300">
+                                                        {center.weather.wind_gust}
+                                                    </span>
+                                                    <span className="text-[10px] font-bold text-zinc-600">KT</span>
+                                                </div>
+                                            </div>
+                                            <div className="space-y-1.5 p-3 rounded-xl bg-zinc-950/40 border border-zinc-800/40">
+                                                <div className="flex items-center gap-2 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">
+                                                    <Eye className="w-3.5 h-3.5" /> Visibilidad
+                                                </div>
+                                                <div className="flex items-baseline gap-1.5">
+                                                    <span className="text-xl font-bold text-zinc-300">
+                                                        {center.weather.visibility}
+                                                    </span>
+                                                    <span className="text-[10px] font-bold text-zinc-600">KM</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="p-4 bg-zinc-950/20 border border-dashed border-zinc-800 rounded-xl text-center text-xs text-zinc-600 italic">
+                                            A la espera de reporte meteorológico...
+                                        </div>
+                                    )}
+                                </div>
+                            ))
+                        )}
+                    </div>
+
+                    {/* Desktop View: Table */}
+                    <div className="hidden md:block overflow-x-auto">
                         <Table>
                             <TableHeader className="bg-zinc-950/30">
                                 <TableRow className="hover:bg-transparent border-zinc-800">
