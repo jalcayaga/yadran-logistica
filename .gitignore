@@ -45,3 +45,11 @@ data/test/
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Other Projects & Backups
+evolution-backend/
+backup/
+docs/n8n/
+
+# Root JS test scripts
+*.js
