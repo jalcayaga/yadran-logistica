@@ -3,7 +3,7 @@ const XLSX = require('xlsx');
 const dotenv = require('dotenv');
 const path = require('path');
 
-dotenv.config({ path: path.resolve(__dirname, '../.env.local') });
+dotenv.config({ path: path.resolve(__dirname, '../../.env.local') });
 
 const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -77,7 +77,7 @@ async function run() {
 
     // 3. Parse Excel and Seed Centers
     console.log('📂 Parsing Excel for Centers...');
-    const excelPath = path.resolve(__dirname, '../public/Trazabilidad Estructuras CY.xlsx');
+    const excelPath = path.resolve(__dirname, '../../public/Trazabilidad Estructuras CY.xlsx');
 
     try {
         const workbook = XLSX.readFile(excelPath);
@@ -135,14 +135,24 @@ async function run() {
 
         console.log(`✅ Found ${centersToInsert.length} centers to ingest.`);
 
-        // Insert centers
+        // Insert centers into locations
         for (const center of centersToInsert) {
-            const { error } = await supabase.from('centers').upsert(center, { onConflict: 'name' });
+            const code = center.name.toString().toUpperCase().replace(/\s+/g, '_').replace(/[^A-Z0-9_]/g, '');
+
+            const { error } = await supabase.from('locations').upsert({
+                name: center.name,
+                code: code,
+                type: 'center',
+                latitude: center.latitude,
+                longitude: center.longitude,
+                port_code: center.port_code,
+                active: true
+            }, { onConflict: 'code' });
+
             if (error) {
-                // If 'name' is not unique, we might need a composite key or just insert
-                // Assuming 'name' is unique for this demo context or adding conflict handling
-                const { error: insertError } = await supabase.from('centers').insert(center);
-                if (insertError) console.error(`Error inserting center ${center.name}:`, insertError.message);
+                console.error(`❌ Error inserting center ${center.name} into locations:`, error.message);
+            } else {
+                console.log(`✅ Center synced: ${center.name}`);
             }
         }
 

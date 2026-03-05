@@ -7,13 +7,18 @@
  * 1. CLIMA: STORMGLASS.IO
  * ----------------------
  * - Es la mejor API marina (usa modelos ECMWF y NOAA).
- * - Plan Free: 10 consultas al día (un poco limitado, pero perfecto para probar).
- * - Plan Pro: ~50 USD/mes para consultas cada hora.
+ * - **ESTRATEGIA OPTIMIZADA (PLAN FREE - 10/day):**
+ *   Dividir el día en 10 slots (cada 2.4 horas) es buena idea, pero podemos ser aún más eficientes:
+ * 
+ *   TIP MAESTRO: Una sola llamada a Stormglass puede devolver hasta 10 días de pronóstico.
+ *   - En n8n, cuando hagas el HTTP Request, guarda TODAS las horas que te devuelva la API.
+ *   - Si haces 1 sola consulta a las 08:00 AM, ya tienes el pronóstico para TODO el día.
+ *   - Recomendación: Haz 3-4 consultas al día (Madrugada, Mañana, Tarde, Noche) para capturar cambios de modelo.
+ *   - Así te sobran 6-7 consultas para "Refresco Manual" cuando el usuario pulse el botón en el dashboard.
  * 
  * ESTRATEGIA EN n8n:
- * - No consultes todos los centros (tienes 60+).
- * - Consulta solo los que tienen itinerarios para HOY o MAÑANA.
- * - JSON de Consulta Recomendado (en nodo HTTP Request):
+ * - Filtra por centros con actividad próxima (ahorra tokens).
+ * - Consulta recomendada: 
  *   URL: https://api.stormglass.io/v2/weather/point?lat={{$json.lat}}&lng={{$json.lng}}&params=windSpeed,windGust,waveHeight,visibility
  */
 
