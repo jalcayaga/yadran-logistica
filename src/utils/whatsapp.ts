@@ -99,19 +99,31 @@ export const sendItineraryToWebhook = async (itinerary: any, crew: any[], manife
                 vessel_name: itinerary.vessel?.name || 'Nave por asignar',
                 route: fullRoute
             },
-            crew: crew.map(c => ({
-                name: `${c.person.first_name} ${c.person.last_name}`,
-                role: c.role,
-                phone: c.person.phone_e164,
-                confirmation_link: c.confirmation_link
-            })),
+            crew: crew.map(c => {
+                const isCaptain = c.role === 'captain' || c.role === 'substitute';
+                // Remove trailing slash from the url if it exists, replace /confirm/ with /m/ for the dashboard
+                const baseUrl = c.confirmation_link.split('/confirm/')[0];
+                const token = c.confirmation_link.split('/confirm/')[1];
+
+                return {
+                    id: c.id,
+                    person_id: c.person_id,
+                    name: `${c.person.first_name} ${c.person.last_name}`,
+                    role: c.role,
+                    phone: c.person.phone_e164,
+                    confirmation_link: c.confirmation_link,
+                    dashboard_link: isCaptain ? `${baseUrl}/m/${token}` : null,
+                    token: token
+                };
+            }),
             passengers: passengers.map(p => ({
                 name: p.passenger?.first_name ? `${p.passenger.first_name} ${p.passenger.last_name}` : 'Pasajero',
                 phone: p.passenger?.phone_e164 || '',
                 role: 'passenger',
                 origin: p.origin_stop?.location?.name || '---',
                 destination: p.destination_stop?.location?.name || '---',
-                confirmation_link: p.confirmation_link
+                confirmation_link: p.confirmation_link,
+                token: p.confirmation_link.split('/confirm/')[1]
             })),
             manifest_pdf: manifestUrl,
             maritime_evaluation: maritimeEval,

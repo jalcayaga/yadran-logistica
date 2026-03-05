@@ -539,7 +539,7 @@ export default function BookingManager({ itinerary }: BookingManagerProps) {
                                 <SelectContent>
                                     {sortedStops.map((stop: any) => (
                                         <SelectItem key={stop.id} value={stop.id}>
-                                            {stop.location.name}
+                                            {stop.stop_order}. {stop.location.name} {stop.arrival_time ? `(${stop.arrival_time.substring(0, 5)})` : ''}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
@@ -555,7 +555,7 @@ export default function BookingManager({ itinerary }: BookingManagerProps) {
                                 <SelectContent>
                                     {sortedStops.map((stop: any) => (
                                         <SelectItem key={stop.id} value={stop.id}>
-                                            {stop.location.name}
+                                            {stop.stop_order}. {stop.location.name} {stop.arrival_time ? `(${stop.arrival_time.substring(0, 5)})` : ''}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>

@@ -7,6 +7,8 @@ export default function CrewConfirmationPage() {
     const { token } = useParams();
     const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
     const [message, setMessage] = useState('Procesando tu confirmación...');
+    const [role, setRole] = useState<string>('');
+    const [trackingToken, setTrackingToken] = useState<string | null>(null);
 
     useEffect(() => {
         async function confirm() {
@@ -16,8 +18,11 @@ export default function CrewConfirmationPage() {
                 });
 
                 if (res.ok) {
+                    const data = await res.json();
                     setStatus('success');
                     setMessage('¡Viaje confirmado con éxito!');
+                    if (data.role) setRole(data.role);
+                    if (data.tracking_token) setTrackingToken(data.tracking_token);
                 } else {
                     const data = await res.json();
                     setStatus('error');
@@ -61,10 +66,38 @@ export default function CrewConfirmationPage() {
 
                 {status === 'success' && (
                     <div className="mt-8 pt-8 border-t border-slate-50">
-                        <p className="text-sm text-slate-400 italic">
-                            Gracias por confirmar. El equipo de Logística Yadran ha sido notificado.
-                        </p>
-                        <div className="mt-6 text-2xl">⚓🚢✨</div>
+                        {role === 'captain' || role === 'substitute' ? (
+                            <div className="space-y-4">
+                                <p className="text-sm text-slate-600 font-medium">
+                                    Puedes acceder a tu Panel de Control para ver el Manifiesto y las confirmaciones.
+                                </p>
+                                <button
+                                    onClick={() => window.location.href = `/m/${token}`}
+                                    className="w-full px-6 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-colors shadow-lg shadow-slate-200"
+                                >
+                                    Abrir Panel del Capitán
+                                </button>
+                            </div>
+                        ) : trackingToken ? (
+                            <div className="space-y-4">
+                                <p className="text-sm text-slate-600 font-medium">
+                                    Puedes ver el estado en tiempo real de tu viaje en el Panel de Monitoreo.
+                                </p>
+                                <button
+                                    onClick={() => window.location.href = `/i/${trackingToken}`}
+                                    className="w-full px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200"
+                                >
+                                    Ver Estado del Viaje
+                                </button>
+                            </div>
+                        ) : (
+                            <>
+                                <p className="text-sm text-slate-400 italic">
+                                    Gracias por confirmar. El equipo de Logística Yadran ha sido notificado.
+                                </p>
+                                <div className="mt-6 text-2xl">⚓🚢✨</div>
+                            </>
+                        )}
                     </div>
                 )}
 

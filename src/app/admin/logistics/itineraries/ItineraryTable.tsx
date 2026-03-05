@@ -308,7 +308,7 @@ export default function ItineraryTable({ hideHeader = false }: { hideHeader?: bo
                                     <Plus className="mr-2 h-4 w-4" /> Nuevo Itinerario
                                 </Button>
                             </DialogTrigger>
-                            <DialogContent className="max-w-3xl">
+                            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
                                 <DialogHeader>
                                     <DialogTitle className="text-xl flex items-center gap-2">
                                         <CalendarDays className="w-5 h-5 text-blue-600" />

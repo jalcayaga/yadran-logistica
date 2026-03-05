@@ -47,6 +47,18 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         if (!statusVal.success) {
             return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
         }
+
+        if (headerData.status === 'in_progress') {
+            try {
+                const evalUrl = new URL(`/api/logistics/evaluate/${id}`, request.url).toString();
+                const evalRes = await fetch(evalUrl);
+                if (evalRes.ok) {
+                    headerData.departure_weather = await evalRes.json();
+                }
+            } catch (e) {
+                console.error("Failed to capture departure weather snapshot", e);
+            }
+        }
     }
 
     // 2. Handle Stops Update (if provided)

@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/utils/supabase/admin';
 import { NextRequest, NextResponse } from 'next/server';
+import { getOrCreateItineraryToken } from '@/utils/itinerary-token';
 
 export async function POST(
     request: NextRequest,
@@ -15,7 +16,24 @@ export async function POST(
         });
 
         if (successCrew) {
-            return NextResponse.json({ success: true, type: 'crew' });
+            const { data: crewData } = await supabase
+                .from('crew_assignments')
+                .select('role, itinerary_id, itineraries(date, start_time)')
+                .eq('confirmation_token', token)
+                .single();
+
+            let trackingToken = null;
+            if (crewData?.itineraries) {
+                const itin = crewData.itineraries as any;
+                trackingToken = await getOrCreateItineraryToken(crewData.itinerary_id, itin.date, itin.start_time);
+            }
+
+            return NextResponse.json({
+                success: true,
+                type: 'crew',
+                role: crewData?.role || 'member',
+                tracking_token: trackingToken
+            });
         }
 
         // 2. Try confirming as booking
@@ -24,7 +42,23 @@ export async function POST(
         });
 
         if (successBooking) {
-            return NextResponse.json({ success: true, type: 'passenger' });
+            const { data: bookingData } = await supabase
+                .from('bookings')
+                .select('itinerary_id, itineraries(date, start_time)')
+                .eq('confirmation_token', token)
+                .single();
+
+            let trackingToken = null;
+            if (bookingData?.itineraries) {
+                const itin = bookingData.itineraries as any;
+                trackingToken = await getOrCreateItineraryToken(bookingData.itinerary_id, itin.date, itin.start_time);
+            }
+
+            return NextResponse.json({
+                success: true,
+                type: 'passenger',
+                tracking_token: trackingToken
+            });
         }
 
         if (errorCrew || errorBooking) {

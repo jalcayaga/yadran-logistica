@@ -55,6 +55,15 @@ export async function GET(
                 .single();
 
             if (weather && vesselType) {
+                const snapshotTime = new Date(weather.timestamp).getTime();
+                const now = new Date().getTime();
+                const hoursOld = (now - snapshotTime) / (1000 * 60 * 60);
+
+                if (hoursOld > 6) {
+                    if (finalDecision === 'GO') finalDecision = 'EVAL';
+                    reasons.push(`Datos climáticos desactualizados en ${stop.location.name} (hace ${Math.round(hoursOld)} horas).`);
+                }
+
                 if (weather.wind_speed > vesselType.max_wind_knots) {
                     finalDecision = 'NO-GO';
                     reasons.push(`Viento excesivo en ${stop.location.name}: ${weather.wind_speed}kt (Máx: ${vesselType.max_wind_knots}kt)`);

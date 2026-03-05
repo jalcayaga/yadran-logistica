@@ -26,9 +26,18 @@ export async function GET(request: NextRequest) {
                 type,
                 weather:center_weather_snapshots(
                     wind_speed,
+                    wind_direction,
                     wind_gust,
                     wave_height,
-                    visibility,
+                    wave_direction,
+                    wave_period,
+                    swell_wave_height,
+                    swell_wave_direction,
+                    swell_wave_period,
+                    temperature,
+                    humidity,
+                    pressure,
+                    precipitation,
                     timestamp
                 )
             `)
@@ -47,18 +56,27 @@ export async function GET(request: NextRequest) {
                 ? snapshots.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0]
                 : null;
 
+            let processedWeather = latestWeather;
+            if (latestWeather) {
+                const hoursOld = (new Date().getTime() - new Date(latestWeather.timestamp).getTime()) / (1000 * 60 * 60);
+                processedWeather = {
+                    ...latestWeather,
+                    is_stale: hoursOld > 6
+                };
+            }
+
             return {
                 id: loc.id,
                 name: loc.name,
                 code: loc.code,
-                weather: latestWeather
+                weather: processedWeather
             };
         });
 
         return NextResponse.json({
             ports: ports.map(p => ({
                 ...p,
-                status: p.status?.[0] || null // Handle the array returned by the join
+                status: p.status || null // Direct object, no array [0] needed
             })),
             centers: processedCenters,
             timestamp: new Date().toISOString()

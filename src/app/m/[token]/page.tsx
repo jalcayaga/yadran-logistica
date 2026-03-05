@@ -64,6 +64,51 @@ export default function CaptainDashboard() {
     const [data, setData] = useState<ManifestData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [generating, setGenerating] = useState(false);
+
+    const handleDownloadManifest = async () => {
+        if (!data) return;
+
+        // Use existing pre-generated manifest if available
+        if (data.itinerary.manifest_pdf) {
+            window.open(data.itinerary.manifest_pdf, '_blank');
+            return;
+        }
+
+        try {
+            setGenerating(true);
+            const { pdf } = await import('@react-pdf/renderer');
+            const { ManifestDocument } = await import('@/components/pdf/ManifestDocument');
+
+            const nameParts = data.crew_member.name.split(' ');
+            const crewList = [{
+                role: 'captain',
+                person: {
+                    first_name: nameParts[0] || '',
+                    last_name: nameParts.slice(1).join(' ') || ''
+                }
+            }];
+
+            const blob = await pdf(
+                <ManifestDocument
+                    vesselName={data.itinerary.vessel.name || 'Nave Desconocida'}
+                    vesselRegistration={data.itinerary.vessel.registration_number}
+                    itineraryDate={format(new Date(data.itinerary.date + 'T12:00:00'), 'dd/MM/yyyy')}
+                    startTime={data.itinerary.start_time}
+                    passengers={data.passengers}
+                    crew={crewList}
+                />
+            ).toBlob();
+
+            const url = URL.createObjectURL(blob);
+            window.open(url, '_blank');
+        } catch (err) {
+            console.error('Error generating PDF:', err);
+            alert('Error al generar el manifiesto PDF.');
+        } finally {
+            setGenerating(false);
+        }
+    };
 
     useEffect(() => {
         async function fetchManifest() {
@@ -109,173 +154,219 @@ export default function CaptainDashboard() {
     const confirmedPercent = (data.stats.confirmed / data.stats.total) * 100 || 0;
 
     return (
-        <div className="min-h-screen bg-slate-50 pb-20 font-sans">
-            {/* Dark Header */}
-            <header className="bg-slate-900 text-white pt-10 pb-24 px-6 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/10 rounded-full -mr-32 -mt-32 blur-3xl" />
-                <div className="absolute bottom-0 left-0 w-48 h-48 bg-emerald-600/10 rounded-full -ml-24 -mb-24 blur-3xl" />
+        <div className="min-h-screen bg-slate-950 text-slate-100 pb-20 font-sans selection:bg-blue-500/30">
+            {/* Dark Premium Header */}
+            <header className="bg-slate-900 pt-10 pb-24 lg:pt-16 lg:pb-32 px-6 lg:px-12 relative overflow-hidden border-b border-white/5">
+                {/* Decorative glows */}
+                <div className="absolute top-0 right-0 w-[500px] lg:w-[800px] h-[500px] lg:h-[800px] bg-blue-600/20 rounded-full blur-[100px] lg:blur-[150px] -mr-64 -mt-64 pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-[400px] lg:w-[600px] h-[400px] lg:h-[600px] bg-emerald-600/10 rounded-full blur-[80px] lg:blur-[120px] -ml-48 -mb-48 pointer-events-none" />
 
-                <div className="max-w-4xl mx-auto relative">
-                    <div className="flex justify-between items-start mb-6">
-                        <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30">
-                                <Ship className="text-white w-7 h-7" />
+                <div className="max-w-md md:max-w-3xl lg:max-w-6xl mx-auto relative z-10">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                        <div className="flex items-center gap-4 lg:gap-6">
+                            <div className="w-14 h-14 lg:w-20 lg:h-20 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30 shrink-0">
+                                <Ship className="text-white w-7 h-7 lg:w-10 lg:h-10" />
                             </div>
                             <div>
-                                <h1 className="text-2xl font-black uppercase tracking-tight">Panel del Capitán</h1>
-                                <p className="text-blue-300 text-xs font-bold uppercase tracking-widest leading-none mt-1">
+                                <h1 className="text-2xl lg:text-5xl font-black uppercase tracking-tight text-white">Panel del Capitán</h1>
+                                <p className="text-blue-400 text-xs lg:text-sm font-black uppercase tracking-widest leading-none mt-1 lg:mt-2">
                                     Logística Yadran
                                 </p>
                             </div>
                         </div>
-                        <Badge variant="outline" className="text-blue-400 border-blue-400/30 bg-blue-400/5 px-3 py-1 uppercase text-[10px] font-black tracking-widest">
-                            {data.itinerary.status === 'scheduled' ? '● Programado' : '● En Curso'}
-                        </Badge>
+                        <div className={`flex items-center gap-2 px-3 lg:px-4 py-1.5 lg:py-2 rounded-full text-[10px] lg:text-xs font-black uppercase tracking-widest border border-white/10 bg-white/5 shadow-xl backdrop-blur-md ${data.itinerary.status === 'in_progress' ? 'animate-pulse ring-1 ring-emerald-500/50' : ''}`}>
+                            <div className={`w-2 h-2 rounded-full shadow-[0_0_10px_rgba(0,0,0,0.5)] ${data.itinerary.status === 'scheduled' ? 'bg-amber-400' : 'bg-emerald-400'}`} />
+                            {data.itinerary.status === 'scheduled' ? 'Programado' : 'En Curso'}
+                        </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4 mt-8">
-                        <div className="bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-md">
-                            <p className="text-[10px] text-white/40 uppercase font-black tracking-widest mb-1">Nave</p>
-                            <p className="text-lg font-bold">{data.itinerary.vessel.name}</p>
-                            <p className="text-[10px] text-blue-400 font-mono">{data.itinerary.vessel.registration_number}</p>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-8 mt-8 lg:mt-12 bg-white/5 border border-white/10 rounded-3xl p-6 lg:p-10 backdrop-blur-xl shadow-2xl relative overflow-hidden group">
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent pointer-events-none" />
+
+                        <div className="md:col-span-2 relative z-10">
+                            <p className="text-[10px] lg:text-xs text-blue-200/50 uppercase font-black tracking-widest mb-1.5 lg:mb-2">Nave</p>
+                            <p className="text-xl lg:text-3xl font-bold text-white">{data.itinerary.vessel.name}</p>
+                            <p className="text-[10px] lg:text-xs text-blue-400 font-mono mt-1">{data.itinerary.vessel.registration_number}</p>
                         </div>
-                        <div className="bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-md">
-                            <p className="text-[10px] text-white/40 uppercase font-black tracking-widest mb-1">Zarpe Estimado</p>
-                            <div className="flex items-center gap-2">
-                                <Clock className="w-4 h-4 text-emerald-400" />
-                                <p className="text-lg font-bold">{data.itinerary.start_time}</p>
+                        <div className="relative z-10">
+                            <p className="text-[10px] lg:text-xs text-blue-200/50 uppercase font-black tracking-widest mb-2 lg:mb-3">Fecha</p>
+                            <div className="flex items-center gap-2.5">
+                                <div className="w-7 h-7 lg:w-8 lg:h-8 rounded-lg bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+                                    <Calendar className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-blue-400" />
+                                </div>
+                                <p className="text-sm lg:text-lg font-bold text-slate-200">{format(new Date(data.itinerary.date + 'T12:00:00'), "d 'de' MMM", { locale: es })}</p>
+                            </div>
+                        </div>
+                        <div className="relative z-10">
+                            <p className="text-[10px] lg:text-xs text-blue-200/50 uppercase font-black tracking-widest mb-2 lg:mb-3">Zarpe Estimado</p>
+                            <div className="flex items-center gap-2.5">
+                                <div className="w-7 h-7 lg:w-8 lg:h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+                                    <Clock className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-emerald-400" />
+                                </div>
+                                <p className="text-sm lg:text-lg font-bold text-slate-200">{data.itinerary.start_time}</p>
                             </div>
                         </div>
                     </div>
                 </div>
             </header>
 
-            <main className="max-w-4xl mx-auto -mt-16 px-6 space-y-6">
-                {/* Actions Bar */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Card className="border-none shadow-xl bg-white overflow-hidden group">
-                        <CardContent className="p-0">
-                            <div className="bg-emerald-600 p-6 text-white flex justify-between items-center group-hover:bg-emerald-700 transition-colors">
-                                <div className="space-y-1">
-                                    <h3 className="text-lg font-bold">Manifiesto Digital</h3>
-                                    <p className="text-emerald-100/80 text-xs">Documento oficial para DIRECTEMAR</p>
+            <main className="max-w-md md:max-w-3xl lg:max-w-6xl mx-auto -mt-16 lg:-mt-20 px-6 lg:px-8 relative z-20 space-y-6 lg:space-y-10">
+                {/* Actions Bar & Stats (Grid layout on large screens) */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+
+                    {/* Manifest Action Card */}
+                    <Card className="border border-white/10 shadow-2xl bg-[#0f172a]/80 backdrop-blur-xl overflow-hidden rounded-3xl lg:col-span-1 flex flex-col group relative">
+                        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent pointer-events-none" />
+                        <CardContent className="p-0 flex-1 flex flex-col relative z-10">
+                            <div className="bg-emerald-500/10 border-b border-emerald-500/20 p-6 lg:p-8 flex justify-between items-center group-hover:bg-emerald-500/20 transition-colors">
+                                <div className="space-y-1.5">
+                                    <h3 className="text-lg lg:text-xl font-bold text-white">Manifiesto Digital</h3>
+                                    <p className="text-emerald-400/80 text-xs lg:text-sm font-medium">Documento DIRECTEMAR</p>
                                 </div>
-                                <FileText className="w-10 h-10 opacity-30" />
+                                <FileText className="w-10 h-10 lg:w-12 lg:h-12 text-emerald-500/50" />
                             </div>
-                            <div className="p-4">
+                            <div className="p-6 lg:p-8 flex-1 flex flex-col justify-end">
                                 <Button
-                                    className="w-full bg-slate-900 hover:bg-slate-800 text-white gap-2 font-bold py-6 rounded-xl"
-                                    onClick={() => window.open(data.itinerary.manifest_pdf, '_blank')}
-                                    disabled={!data.itinerary.manifest_pdf}
+                                    className={`w-full text-white gap-3 font-bold py-6 lg:py-8 text-sm lg:text-base rounded-2xl shadow-lg transition-all hover:scale-[1.02] ${generating
+                                            ? 'bg-blue-600/50 cursor-not-allowed'
+                                            : 'bg-blue-600 hover:bg-blue-500 shadow-blue-600/20'
+                                        }`}
+                                    onClick={handleDownloadManifest}
+                                    disabled={generating}
                                 >
-                                    <Download className="w-5 h-5" />
-                                    Descargar Manifiesto PDF
+                                    {generating ? (
+                                        <div className="w-5 h-5 lg:w-6 lg:h-6 border-2 border-white/20 border-t-white rounded-full animate-spin shrink-0" />
+                                    ) : (
+                                        <Download className="w-5 h-5 lg:w-6 lg:h-6 shrink-0" />
+                                    )}
+                                    {generating ? 'Generando...' : 'Descargar Manifiesto PDF'}
                                 </Button>
                             </div>
                         </CardContent>
                     </Card>
 
-                    <Card className="border-none shadow-xl bg-white p-6 flex flex-col justify-between">
-                        <div className="space-y-4">
-                            <div className="flex justify-between items-end">
-                                <div>
-                                    <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Confirmación Pasajeros</p>
-                                    <h3 className="text-3xl font-black text-slate-900">{data.stats.confirmed} <span className="text-slate-300 font-normal">/ {data.stats.total}</span></h3>
+                    {/* Passenger Stats Card */}
+                    <Card className="border border-white/10 shadow-2xl bg-[#0f172a]/80 backdrop-blur-xl overflow-hidden rounded-3xl lg:col-span-2 flex flex-col">
+                        <CardContent className="p-6 lg:p-10 flex flex-col justify-center h-full relative">
+                            <div className="absolute -right-20 -top-20 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+
+                            <div className="space-y-6 lg:space-y-8 relative z-10">
+                                <div className="flex justify-between items-end">
+                                    <div className="space-y-2 lg:space-y-3">
+                                        <p className="text-[10px] lg:text-xs text-blue-200/50 uppercase font-black tracking-widest">Confirmación Pasajeros</p>
+                                        <h3 className="text-4xl lg:text-6xl font-black text-white">{data.stats.confirmed} <span className="text-slate-600 font-bold text-2xl lg:text-4xl">/ {data.stats.total}</span></h3>
+                                    </div>
+                                    <div className="w-14 h-14 lg:w-20 lg:h-20 bg-blue-500/10 border border-blue-500/20 rounded-2xl flex items-center justify-center text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.15)]">
+                                        <Users className="w-7 h-7 lg:w-10 lg:h-10" />
+                                    </div>
                                 </div>
-                                <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center text-blue-600">
-                                    <Users className="w-6 h-6" />
+                                <div className="space-y-3 lg:space-y-4">
+                                    <Progress value={confirmedPercent} className="h-2 lg:h-3 bg-slate-800 [&>div]:bg-blue-500" />
+                                    <div className="flex justify-between text-[10px] lg:text-xs font-black uppercase tracking-widest text-slate-400">
+                                        <span className={confirmedPercent === 100 ? 'text-emerald-400' : 'text-blue-400'}>{confirmedPercent.toFixed(0)}% Confirmados</span>
+                                        <span className="text-slate-500">{data.stats.pending} Pendientes</span>
+                                    </div>
                                 </div>
                             </div>
-                            <div className="space-y-2">
-                                <Progress value={confirmedPercent} className="h-2 bg-slate-100" />
-                                <div className="flex justify-between text-[10px] font-bold uppercase tracking-tight text-slate-400">
-                                    <span>{confirmedPercent.toFixed(0)}% Confirmados</span>
-                                    <span>{data.stats.pending} Pendientes</span>
-                                </div>
-                            </div>
-                        </div>
+                        </CardContent>
                     </Card>
                 </div>
 
-                {/* Stops Timeline */}
-                <Card className="border-none shadow-xl bg-white overflow-hidden">
-                    <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-4 px-6">
-                        <CardTitle className="text-sm flex items-center gap-2 uppercase font-black tracking-widest text-slate-600">
-                            <Anchor className="w-4 h-4 text-blue-500" />
-                            Ruta del Viaje
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="px-6 py-6 overflow-x-auto">
-                        <div className="flex items-center min-w-max pb-4">
-                            {data.itinerary.stops.map((stop, idx) => (
-                                <div key={stop.id} className="flex items-center">
-                                    {idx > 0 && (
-                                        <div className="w-8 h-0.5 bg-slate-100 mx-2" />
-                                    )}
-                                    <div className="flex flex-col items-center gap-2">
-                                        <div className={`w-3 h-3 rounded-full ${idx === 0 ? 'bg-emerald-500' : idx === data.itinerary.stops.length - 1 ? 'bg-rose-500' : 'bg-blue-500'}`} />
-                                        <span className="text-[10px] font-black uppercase text-slate-500">{stop.location.code}</span>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </CardContent>
-                </Card>
+                {/* Bottom Row Layout (Grid on Large Screens) */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
 
-                {/* Passenger List */}
-                <Card className="border-none shadow-xl bg-white overflow-hidden">
-                    <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-4 px-6 flex flex-row items-center justify-between">
-                        <CardTitle className="text-sm flex items-center gap-2 uppercase font-black tracking-widest text-slate-600">
-                            <Users className="w-4 h-4 text-blue-500" />
-                            Listado de Pasajeros
-                        </CardTitle>
-                        <Badge className="bg-blue-600 text-white px-2 py-0">{data.stats.total}</Badge>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                        <div className="divide-y divide-slate-50">
-                            {data.passengers.length === 0 ? (
-                                <div className="p-10 text-center text-slate-400 italic text-sm">No hay pasajeros asignados.</div>
-                            ) : (
-                                data.passengers.map((p) => (
-                                    <div key={p.id} className="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
-                                        <div className="space-y-1">
-                                            <div className="flex items-center gap-2">
-                                                <p className="font-bold text-slate-900">{p.passenger.first_name} {p.passenger.last_name}</p>
-                                                {p.status === 'confirmed' ? (
-                                                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                                                ) : (
-                                                    <div className="w-4 h-4 rounded-full border border-slate-200" />
-                                                )}
-                                            </div>
-                                            <p className="text-[10px] text-slate-400 font-medium flex items-center gap-1.5">
-                                                <span className="bg-slate-100 px-1.5 py-0.5 rounded text-slate-500">{p.passenger.company}</span>
-                                                <ChevronRight className="w-2 h-2" />
-                                                <MapPin className="w-2.5 h-2.5" /> {p.destination_stop.location.name}
-                                            </p>
+                    {/* Stops Timeline (Spans 4 columns) */}
+                    <Card className="border border-white/10 shadow-2xl bg-[#0f172a]/80 backdrop-blur-xl overflow-hidden rounded-3xl lg:col-span-4 self-start">
+                        <CardHeader className="bg-white/[0.02] border-b border-white/5 py-5 px-6 lg:px-8">
+                            <CardTitle className="text-[10px] lg:text-xs flex items-center gap-2 lg:gap-3 uppercase font-black tracking-widest text-slate-400">
+                                <MapPin className="w-4 h-4 lg:w-5 lg:h-5 text-blue-400" />
+                                Ruta de Navegación
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="px-6 lg:px-8 py-6 lg:py-8">
+                            <div className="space-y-0 relative">
+                                {/* Vertical line */}
+                                <div className="absolute left-[9px] top-2 bottom-6 w-[2px] bg-gradient-to-b from-blue-500/50 via-slate-700 to-rose-500/50 rounded-full" />
+
+                                {data.itinerary.stops?.map((stop, idx) => (
+                                    <div key={stop.id} className="relative pl-8 pb-8 last:pb-2 group">
+                                        <div className={`absolute left-0 top-1 w-5 h-5 rounded-full border-4 border-[#0f172a] shadow-lg transition-transform duration-300 group-hover:scale-125 ${idx === 0 ? 'bg-emerald-500 shadow-emerald-500/40' : idx === data.itinerary.stops.length - 1 ? 'bg-rose-500 shadow-rose-500/40' : 'bg-blue-500 shadow-blue-500/40'
+                                            }`} />
+
+                                        <div className="flex flex-col -mt-1 lg:-mt-1.5">
+                                            <p className="font-bold text-white text-sm lg:text-base tracking-wide">{stop.location.name}</p>
+                                            <Badge variant="secondary" className="bg-slate-800 text-slate-300 border border-slate-700 text-[9px] lg:text-[10px] font-black tracking-wider px-2 py-0.5 w-fit mt-1.5 lg:mt-2">
+                                                {stop.location.code}
+                                            </Badge>
                                         </div>
-                                        <Badge
-                                            variant="secondary"
-                                            className={`text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 ${p.status === 'confirmed'
-                                                    ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                                                    : 'bg-slate-100 text-slate-400 border-slate-200'
-                                                }`}
-                                        >
-                                            {p.status === 'confirmed' ? 'Confirmado' : 'Pendiente'}
-                                        </Badge>
                                     </div>
-                                ))
-                            )}
-                        </div>
-                    </CardContent>
-                </Card>
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Passenger List (Spans 8 columns) */}
+                    <Card className="border border-white/10 shadow-2xl bg-[#0f172a]/80 backdrop-blur-xl overflow-hidden rounded-3xl lg:col-span-8">
+                        <CardHeader className="bg-white/[0.02] border-b border-white/5 py-5 px-6 lg:px-8 flex flex-row items-center justify-between">
+                            <CardTitle className="text-[10px] lg:text-xs flex items-center gap-2 lg:gap-3 uppercase font-black tracking-widest text-slate-400">
+                                <Users className="w-4 h-4 lg:w-5 lg:h-5 text-blue-400" />
+                                Manifiesto de Pasajeros
+                            </CardTitle>
+                            <Badge className="bg-blue-500/20 text-blue-400 border border-blue-500/30 px-3 py-1 font-bold text-xs">
+                                {data.stats.total} Total
+                            </Badge>
+                        </CardHeader>
+                        <CardContent className="p-0">
+                            <div className="divide-y divide-white/5">
+                                {data.passengers.length === 0 ? (
+                                    <div className="p-10 text-center text-slate-500 italic text-sm">No hay pasajeros asignados en este manifiesto.</div>
+                                ) : (
+                                    data.passengers.map((p) => (
+                                        <div key={p.id} className="p-5 lg:p-6 flex flex-col md:flex-row md:items-center justify-between hover:bg-white/[0.02] transition-colors gap-4">
+                                            <div className="space-y-1.5 lg:space-y-2">
+                                                <div className="flex items-center gap-2 lg:gap-3">
+                                                    <p className="font-bold text-white text-sm lg:text-base tracking-wide">{p.passenger.first_name} {p.passenger.last_name}</p>
+                                                    {p.status === 'confirmed' ? (
+                                                        <CheckCircle2 className="w-4 h-4 lg:w-5 lg:h-5 text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
+                                                    ) : (
+                                                        <div className="w-4 h-4 lg:w-5 lg:h-5 rounded-full border-2 border-slate-600" />
+                                                    )}
+                                                </div>
+                                                <p className="text-[10px] lg:text-xs text-slate-400 font-medium flex flex-wrap items-center gap-1.5 lg:gap-2">
+                                                    <span className="bg-slate-800 text-slate-300 border border-slate-700 px-2 lg:px-2.5 py-0.5 lg:py-1 rounded font-bold uppercase tracking-widest">{p.passenger.company}</span>
+                                                    <ChevronRight className="w-3 h-3 text-slate-600" />
+                                                    <span className="flex items-center gap-1">
+                                                        <MapPin className="w-3 h-3 text-blue-400" />
+                                                        {p.destination_stop.location.name}
+                                                    </span>
+                                                </p>
+                                            </div>
+                                            <Badge
+                                                variant="secondary"
+                                                className={`text-[9px] lg:text-[10px] font-black uppercase tracking-widest px-3 py-1 lg:px-4 lg:py-1.5 rounded-full md:shrink-0 w-fit ${p.status === 'confirmed'
+                                                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                                                    : 'bg-slate-800 text-slate-400 border border-slate-700'
+                                                    }`}
+                                            >
+                                                {p.status === 'confirmed' ? 'Confirmado' : 'Pendiente'}
+                                            </Badge>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
 
                 {/* Footer Info */}
-                <div className="text-center space-y-4 pt-10">
-                    <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest">
-                        Sesión del Capitán: {data.crew_member.name}
+                <div className="text-center space-y-4 pt-10 pb-8 lg:pb-12">
+                    <p className="text-[10px] lg:text-xs text-slate-600 font-black uppercase tracking-[0.3em] flex items-center justify-center gap-3 lg:gap-5">
+                        <span className="w-8 lg:w-12 h-px bg-slate-800" />
+                        Sesión Capitán: {data.crew_member.name}
+                        <span className="w-8 lg:w-12 h-px bg-slate-800" />
                     </p>
-                    <div className="flex justify-center gap-4 text-slate-300">
-                        <Anchor className="w-5 h-5 opacity-20" />
+                    <div className="flex justify-center flex-col items-center gap-2 text-slate-700">
+                        <Anchor className="w-6 h-6 hover:text-slate-500 transition-colors" />
                     </div>
                 </div>
             </main>
